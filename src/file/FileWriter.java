@@ -14,13 +14,14 @@ public class FileWriter {
 
         StringBuilder builder;
         for (Particle p : particleSetMap.keySet()) {
-            builder = new StringBuilder(p.getId());
+            builder = new StringBuilder();
+            builder.append(p.getId());
             builder.append(", ");
             for (Particle p2 : particleSetMap.get(p)) {
-                builder.append(p2);
+                builder.append(p2.getId());
                 builder.append(", ");
             }
-            builder.deleteCharAt(builder.length() - 1);
+            builder.setLength(builder.length() - 2);
             writer.println(builder.toString());
         }
 
