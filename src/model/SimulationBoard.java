@@ -36,10 +36,10 @@ public class SimulationBoard {
                 List<Particle> cellParticles = cells[i][j];
 
                 calculateNeighbors(cellParticles, closeParticles, cells, i, j, rc);
-                calculateNeighbors(cellParticles, closeParticles, cells, i + 1, j, rc);
-                calculateNeighbors(cellParticles, closeParticles, cells, i + 1, j + 1, rc);
-                calculateNeighbors(cellParticles, closeParticles, cells, i, j + 1, rc);
-                calculateNeighbors(cellParticles, closeParticles, cells, i + 1, j - 1, rc);
+                calculateNeighbors(cellParticles, closeParticles, cells, (i + 1) % m, j, rc);
+                calculateNeighbors(cellParticles, closeParticles, cells, (i + 1) % m, (j + 1) % m, rc);
+                calculateNeighbors(cellParticles, closeParticles, cells, i, (j + 1) % m, rc);
+                calculateNeighbors(cellParticles, closeParticles, cells, (i + 1) % m, (j - 1 + m) % m, rc);
             }
         }
 
