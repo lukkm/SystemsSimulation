@@ -2,15 +2,25 @@ package model;
 
 public class Particle {
 
+    int id;
     float radius;
     float color;
     float x, y, vx, vy;
 
-    public Particle(float radius, float color, float x, float y) {
+    public Particle(int id, float radius, float color, float x, float y) {
+        this.id = id;
         this.radius = radius;
         this.color = color;
         this.x = x;
         this.y = y;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public float getRadius() {
+        return radius;
     }
 
     public float getX() {

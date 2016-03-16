@@ -35,6 +35,7 @@ public class FileLoader {
         String[] particleStaticInfo;
         String[] particleDynamicInfo;
         float radius, color, x, y;
+        int id = 1;
 
         while ((staticLine = staticBr.readLine()) != null
                 && (dynamicLine = dynamicBr.readLine()) != null
@@ -51,7 +52,7 @@ public class FileLoader {
             x = Float.valueOf(particleDynamicInfo[0]);
             y = Float.valueOf(particleDynamicInfo[1]);
 
-            particleList.add(new Particle(radius, color, x, y));
+            particleList.add(new Particle(id++, radius, color, x, y));
         }
 
         if (particleList.size() < n) return null;
