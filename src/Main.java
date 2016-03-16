@@ -26,8 +26,13 @@ public class Main {
                 return;
             }
 
+            long bruteForceTime = System.currentTimeMillis();
             Map<Particle, Set<Particle>> closeParticles = board.calculateBruteForceDistance(rC);
+            long bruteForceTime2 = System.currentTimeMillis();
+
             output(closeParticles);
+            System.out.println(String.format("Elapsed time for brute force: %d ms", bruteForceTime2 - bruteForceTime));
+
         } catch (IOException e) {
             // Do something
         }
@@ -42,6 +47,7 @@ public class Main {
             }
             System.out.println();
         }
+        System.out.println();
     }
 
 }
