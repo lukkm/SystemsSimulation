@@ -14,9 +14,10 @@ public class Main {
         String staticFile = args[0];
         String dynamicFile = args[1];
         int M = Integer.valueOf(args[2]);
-
+        SimulationBoard board;
         try {
-            SimulationBoard board = FileLoader.loadFiles(staticFile, dynamicFile);
+            board = FileLoader.loadFiles(staticFile, dynamicFile);
+            board.AddParticles(5);
         } catch (IOException e) {
             // Do something
         }
