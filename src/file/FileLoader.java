@@ -12,39 +12,50 @@ import java.util.List;
 
 public class FileLoader {
 
-    public static SimulationBoard loadStaticFile(String file) throws IOException {
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line = br.readLine();
-            if (line == null) return null;
+    private static final int MIN_STATIC_FORMAT = 2;
+    private static final int MIN_DYNAMIC_FORMAT = 2;
 
-            int n = Integer.valueOf(line);
+    public static SimulationBoard loadFiles(String staticFile, String dynamicFile) throws IOException {
+        BufferedReader staticBr = new BufferedReader(new FileReader(staticFile));
+        BufferedReader dynamicBr = new BufferedReader(new FileReader(dynamicFile));
 
-            line = br.readLine();
-            if (line == null) return null;
+        String staticLine = staticBr.readLine();
+        String dynamicLine = dynamicBr.readLine();
+        if (staticLine == null || dynamicLine == null) return null;
 
-            int l = Integer.valueOf(line);
+        int n = Integer.valueOf(staticLine.trim());
+        int t0 = Integer.valueOf(dynamicLine.trim());
 
-            List<Particle> particleList = new ArrayList<>();
-            String[] particleInfo;
-            float radius, color;
+        staticLine = staticBr.readLine();
+        if (staticLine == null) return null;
 
-            while ((line = br.readLine()) != null && particleList.size() < n) {
-                particleInfo = line.split(" ");
-                if (particleInfo.length < 2) return null;
+        int l = Integer.valueOf(staticLine.trim());
 
-                radius = Float.valueOf(particleInfo[0]);
-                color = Float.valueOf(particleInfo[1]);
+        List<Particle> particleList = new ArrayList<>();
+        String[] particleStaticInfo;
+        String[] particleDynamicInfo;
+        float radius, color, x, y;
 
-                particleList.add(new Particle(radius, color));
+        while ((staticLine = staticBr.readLine()) != null
+                && (dynamicLine = dynamicBr.readLine()) != null
+                && particleList.size() < n) {
+            particleStaticInfo = staticLine.trim().split("\\s+");
+            particleDynamicInfo = dynamicLine.trim().split("\\s+");
+
+            if (particleStaticInfo.length < MIN_STATIC_FORMAT || particleDynamicInfo.length < MIN_DYNAMIC_FORMAT) {
+                return null;
             }
 
-            if (particleList.size() < n) return null;
-            return new SimulationBoard(l, particleList);
-        }
-    }
+            radius = Float.valueOf(particleStaticInfo[0]);
+            color = Float.valueOf(particleStaticInfo[1]);
+            x = Float.valueOf(particleDynamicInfo[0]);
+            y = Float.valueOf(particleDynamicInfo[1]);
 
-    public static SimulationBoard loadDynamicFile() {
-        return null;
+            particleList.add(new Particle(radius, color, x, y));
+        }
+
+        if (particleList.size() < n) return null;
+        return new SimulationBoard(l, particleList);
     }
 
 }

@@ -4,11 +4,11 @@ import java.util.List;
 
 public class SimulationBoard {
 
-    private Particle[][] board;
+    private int l;
     private List<Particle> particleList;
 
     public SimulationBoard(int l, List<Particle> particleList) {
-        board = new Particle[l][l];
+        this.l = l;
         this.particleList = particleList;
     }
 
