@@ -41,6 +41,7 @@ public class Main {
             System.out.println(String.format("Elapsed time for Cell Index Method Algorithm: %d ms", time2 - time));
 
             file.FileWriter.printToFile(outputFile, closeParticles);
+            file.FileWriter.printToGraphicFile("Graphic.txt", closeParticles, 68);
         } catch (IOException e) {
             // Do something
         }
