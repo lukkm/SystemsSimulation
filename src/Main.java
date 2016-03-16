@@ -33,7 +33,7 @@ public class Main {
             long bruteForceTime2 = System.currentTimeMillis();
 
             long time = System.currentTimeMillis();
-            Map<Particle, Set<Particle>> closeParticles = board.calculateBruteForceDistance(rC);
+            Map<Particle, Set<Particle>> closeParticles = board.calculateDistance(15, rC);
             long time2 = System.currentTimeMillis();
 
             output(closeParticles);
