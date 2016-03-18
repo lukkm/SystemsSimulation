@@ -54,4 +54,8 @@ public class Particle {
     public void setVy(float vy) {
         this.vy = vy;
     }
+
+    public Particle copy() {
+        return new Particle(id, radius, color, x, y);
+    }
 }

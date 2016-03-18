@@ -1,6 +1,6 @@
 import file.FileLoader;
 import model.Particle;
-import model.SimulationBoard;
+import controller.SimulationController;
 
 import java.io.IOException;
 import java.util.Map;
@@ -9,18 +9,21 @@ import java.util.Set;
 public class Main {
 
     public static void main(String[] args) {
-        if (args.length < 4) {
-            System.out.println("Input: <static file> <dynamic file> M rC");
+        if (args.length < 7) {
+            System.out.println("Input: <static file> <dynamic file> <output file> M rC crossMap particleId");
             return;
         }
 
         String staticFile = args[0];
         String dynamicFile = args[1];
-        int M = Integer.valueOf(args[2]);
-        float rC = Float.valueOf(args[3]);
+        String outputFile = args[2];
+        int M = Integer.valueOf(args[3]);
+        float rC = Float.valueOf(args[4]);
+        boolean crossMap = Integer.valueOf(args[5]) != 0;
+        int particleId = Integer.valueOf(args[6]);
 
         try {
-            SimulationBoard board = FileLoader.loadFiles(staticFile, dynamicFile);
+            SimulationController board = FileLoader.loadFiles(staticFile, dynamicFile);
             if (board == null) {
                 System.out.println("Invalid file format");
                 return;
@@ -31,13 +34,15 @@ public class Main {
             long bruteForceTime2 = System.currentTimeMillis();
 
             long time = System.currentTimeMillis();
-            Map<Particle, Set<Particle>> closeParticles = board.calculateDistance(15, rC);
+            Map<Particle, Set<Particle>> closeParticles = board.calculateDistance(M, rC, crossMap);
             long time2 = System.currentTimeMillis();
 
             output(closeParticles);
             System.out.println(String.format("Elapsed time for brute force: %d ms", bruteForceTime2 - bruteForceTime));
             System.out.println(String.format("Elapsed time for Cell Index Method Algorithm: %d ms", time2 - time));
 
+            file.FileWriter.printToFile(outputFile, closeParticles);
+            file.FileWriter.printToGraphicFile("Graphic.txt", closeParticles, particleId);
         } catch (IOException e) {
             // Do something
         }

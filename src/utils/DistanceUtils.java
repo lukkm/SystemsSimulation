@@ -9,4 +9,14 @@ public class DistanceUtils {
                 - p1.getRadius() - p2.getRadius();
     }
 
+    public static double calculateDistance(Particle p1, Particle p2, boolean cross, float l) {
+        if (cross) {
+            p1 = p1.copy();
+            p2 = p2.copy();
+            p1.setX(p1.getX() - l);
+            p2.setX(p2.getX() - l);
+        }
+        return calculateDistance(p1 ,p2);
+    }
+
 }
