@@ -1,22 +1,25 @@
-package model;
+package controller;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import model.Particle;
 import utils.DistanceUtils;
 
 import java.util.*;
 
-public class SimulationBoard {
+public class SimulationController {
 
-    private int l;
+    private float l;
     private List<Particle> particleList;
 
-    public SimulationBoard(int l, List<Particle> particleList) {
+    public SimulationController(float l, List<Particle> particleList) {
         this.l = l;
         this.particleList = particleList;
     }
 
-    public Map<Particle, Set<Particle>> calculateDistance(int m, float rc) {
+    @SuppressWarnings("unchecked")
+    public Map<Particle, Set<Particle>> calculateDistance(int m, float rc, boolean crossMap) {
         Map<Particle, Set<Particle>> closeParticles = new LinkedHashMap<>();
         List<Particle>[][] cells = new List[m][m];
 
@@ -35,11 +38,11 @@ public class SimulationBoard {
             for(int j = 0; j < m; j++) {
                 List<Particle> cellParticles = cells[i][j];
 
-                calculateNeighbors(cellParticles, closeParticles, cells, i, j, rc);
-                calculateNeighbors(cellParticles, closeParticles, cells, (i + 1) % m, j, rc);
-                calculateNeighbors(cellParticles, closeParticles, cells, (i + 1) % m, (j + 1) % m, rc);
-                calculateNeighbors(cellParticles, closeParticles, cells, i, (j + 1) % m, rc);
-                calculateNeighbors(cellParticles, closeParticles, cells, (i + 1) % m, (j - 1 + m) % m, rc);
+                calculateNeighbors(cellParticles, closeParticles, cells, i, j, rc, crossMap);
+                calculateNeighbors(cellParticles, closeParticles, cells, i + 1, j, rc, crossMap);
+                calculateNeighbors(cellParticles, closeParticles, cells, i + 1, j + 1, rc, crossMap);
+                calculateNeighbors(cellParticles, closeParticles, cells, i, j + 1, rc, crossMap);
+                calculateNeighbors(cellParticles, closeParticles, cells, i + 1, j - 1, rc, crossMap);
             }
         }
 
@@ -52,11 +55,17 @@ public class SimulationBoard {
             List<Particle>[][] cells,
             int i,
             int j,
-            float rc) {
+            float rc,
+            boolean crossMap) {
         if (particles == null) return;
-        if (i < 0 || j < 0 || i >= cells.length || j >= cells.length) return;
 
-        List<Particle> cellParticles = cells[i][j];
+        List<Particle> cellParticles = cells[normalize(i, cells.length)][normalize(j, cells.length)];
+        boolean crossCalculate = false;
+        if (i < 0 || j < 0 || i >= cells.length || j >= cells.length) {
+            if (!crossMap) return;
+            crossCalculate = true;
+        }
+
         if (cellParticles == null) return;
 
         for (Particle p1 : particles) {
@@ -64,7 +73,8 @@ public class SimulationBoard {
             for (Particle p2 : cellParticles) {
                 if (!particleSetMap.containsKey(p2)) particleSetMap.put(p2, new HashSet<>());
                 if (p1 != p2) {
-                    if (isNeighbor(p1, p2, particleSetMap) || DistanceUtils.calculateDistance(p1, p2) < rc) {
+                    if (isNeighbor(p1, p2, particleSetMap)
+                            || DistanceUtils.calculateDistance(p1, p2, crossCalculate, l) < rc) {
                         particleSetMap.get(p1).add(p2);
                         particleSetMap.get(p2).add(p1);
                     }
@@ -90,6 +100,11 @@ public class SimulationBoard {
     private boolean isNeighbor(Particle p1, Particle p2, Map<Particle, Set<Particle>> particleSetMap) {
         return (particleSetMap.containsKey(p1) && particleSetMap.get(p1).contains(p2))
                 || (particleSetMap.containsKey(p2) && particleSetMap.get(p2).contains(p1));
+    }
+
+    private int normalize(int position, int size) {
+        if (position < 0) return position + size;
+        return position % size;
     }
 
 }
