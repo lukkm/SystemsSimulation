@@ -29,8 +29,10 @@ public class SimulationController {
             int xCell = (int)Math.floor(p.getX()/cellSize);
             int yCell = (int)Math.floor(p.getY()/cellSize);
 
-            if (cells[xCell][yCell] == null) cells[xCell][yCell] = new ArrayList<>();
-            cells[xCell][yCell].add(p);
+            if (xCell > 0 && xCell < cells.length && yCell > 0 && yCell < cells.length) {
+                if (cells[xCell][yCell] == null) cells[xCell][yCell] = new ArrayList<>();
+                cells[xCell][yCell].add(p);
+            }
         }
 
 
@@ -60,10 +62,16 @@ public class SimulationController {
         if (particles == null) return;
 
         List<Particle> cellParticles = cells[normalize(i, cells.length)][normalize(j, cells.length)];
-        boolean crossCalculate = false;
-        if (i < 0 || j < 0 || i >= cells.length || j >= cells.length) {
+        boolean crossX = false;
+        boolean crossY = false;
+        if (i < 0 || i >= cells.length) {
             if (!crossMap) return;
-            crossCalculate = true;
+            crossX = true;
+        }
+
+        if (j < 0 || j >= cells.length) {
+            if (!crossMap) return;
+            crossY = true;
         }
 
         if (cellParticles == null) return;
@@ -74,7 +82,7 @@ public class SimulationController {
                 if (!particleSetMap.containsKey(p2)) particleSetMap.put(p2, new HashSet<>());
                 if (p1 != p2) {
                     if (isNeighbor(p1, p2, particleSetMap)
-                            || DistanceUtils.calculateDistance(p1, p2, crossCalculate, l) < rc) {
+                            || DistanceUtils.calculateDistance(p1, p2, crossX, crossY, l) < rc) {
                         particleSetMap.get(p1).add(p2);
                         particleSetMap.get(p2).add(p1);
                     }

@@ -55,7 +55,4 @@ public class Particle {
         this.vy = vy;
     }
 
-    public Particle copy() {
-        return new Particle(id, radius, color, x, y);
-    }
 }
