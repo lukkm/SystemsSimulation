@@ -4,6 +4,7 @@ import model.Particle;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,12 +39,7 @@ public class FileWriter {
         for (Particle p : particles) {
             builder = new StringBuilder();
             boolean isNeighbor = p.getId() == particleId || isNeighbor(particleId, p, particleSetMap);
-            if (isNeighbor){
-                builder.append("1.0 0.0");//R = 255 G=0
-            }
-            else{
-                builder.append("0.0 1.0");//R=0 G=255
-            }
+            builder.append(isNeighbor ? "1.0 0.0" : "0.0 1.0");
             builder.append(" ");
             builder.append(p.getX());
             builder.append(" ");
@@ -54,6 +50,30 @@ public class FileWriter {
 
         writer.close();
     }
+
+    public static void printStepsToGraphicFile(String file, List<List<Particle>> particleSteps) throws IOException {
+        PrintWriter writer = new PrintWriter(file, "UTF-8");
+
+        StringBuilder builder;
+        for (int i = 0; i < particleSteps.size(); i++) {
+            writer.println(particleSteps.get(i).size());
+            writer.println(i);
+            for (Particle p : particleSteps.get(i)) {
+                builder = new StringBuilder();
+                builder.append("1.0 0.0 0.0");
+                builder.append(" ");
+                builder.append(p.getX());
+                builder.append(" ");
+                builder.append(p.getY());
+                builder.append(" ");
+                builder.append(p.getRadius());
+                writer.println(builder.toString());
+            }
+        }
+
+        writer.close();
+    }
+
     private static boolean isNeighbor(int particleId, Particle p, Map<Particle, Set<Particle>> particleSetMap) {
         for (Particle p2 : particleSetMap.get(p)) {
             if (p2.getId() == particleId) return true;

@@ -18,6 +18,47 @@ public class SimulationController {
         this.particleList = particleList;
     }
 
+    public List<List<Particle>> simulateSteps(int steps, double dt, double n) {
+        double newX, newY, newAngle;
+
+        List<List<Particle>> particleSteps = new ArrayList<>();
+        particleSteps.add(particleList);
+
+        for (int i = 0; i < steps; i++) {
+            List<Particle> newStep = new ArrayList<>();
+            for (Particle p : particleList) {
+                Particle newParticle = p.copy();
+                double angleAverage = getAngleAverage(p);
+                newX = (p.getX() + p.getVx() * dt) % l;
+                newY = (p.getY() + p.getVy() * dt) % l;
+                newAngle = angleAverage + (Math.random() * n - n/2);
+
+                newParticle.setX(newX);
+                newParticle.setY(newY);
+                newParticle.setAngle(newAngle);
+
+                newStep.add(newParticle);
+            }
+            particleSteps.add(newStep);
+        }
+
+        return particleSteps;
+    }
+
+    private double getAngleAverage(Particle p) {
+        List<Particle> particles = calculateBruteForceNeighbors(p);
+        double sinSum = 0;
+        double cosSum = 0;
+        for (Particle p2 : particles) {
+            sinSum += Math.sin(p2.getAngle());
+            cosSum += Math.cos(p2.getAngle());
+        }
+        sinSum += Math.sin(p.getAngle());
+        cosSum += Math.cos(p.getAngle());
+
+        return Math.atan((sinSum / (particles.size() + 1)) / (cosSum / (particles.size() + 1)));
+    }
+
     @SuppressWarnings("unchecked")
     public Map<Particle, Set<Particle>> calculateDistance(int m, float rc, boolean crossMap) {
         Map<Particle, Set<Particle>> closeParticles = new LinkedHashMap<>();
@@ -89,6 +130,14 @@ public class SimulationController {
                 }
             }
         }
+    }
+
+    private List<Particle> calculateBruteForceNeighbors(Particle p) {
+        List<Particle> neighbors = new ArrayList<>();
+        for (Particle p2 : particleList) {
+            if (p2 != p && DistanceUtils.calculateDistance(p, p2) < p.getRadius()) neighbors.add(p2);
+        }
+        return neighbors;
     }
 
     public Map<Particle, Set<Particle>> calculateBruteForceDistance(float rc) {

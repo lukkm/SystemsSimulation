@@ -14,6 +14,8 @@ public class FileLoader {
     private static final int MIN_STATIC_FORMAT = 2;
     private static final int MIN_DYNAMIC_FORMAT = 2;
 
+    private static final float DEFAULT_VELOCITY = 0.03f;
+
     public static SimulationController loadFiles(String staticFile, String dynamicFile) throws IOException {
         BufferedReader staticBr = new BufferedReader(new FileReader(staticFile));
         BufferedReader dynamicBr = new BufferedReader(new FileReader(dynamicFile));
@@ -33,7 +35,7 @@ public class FileLoader {
         List<Particle> particleList = new ArrayList<>();
         String[] particleStaticInfo;
         String[] particleDynamicInfo;
-        float radius, color, x, y;
+        double radius, color, x, y;
         int id = 1;
 
         while ((staticLine = staticBr.readLine()) != null
@@ -51,7 +53,13 @@ public class FileLoader {
             x = Float.valueOf(particleDynamicInfo[0]);
             y = Float.valueOf(particleDynamicInfo[1]);
 
-            particleList.add(new Particle(id++, radius, color, x, y));
+            float v = DEFAULT_VELOCITY;
+            float angle = (float) (Math.random() * 2 * Math.PI);
+
+            Particle p = new Particle(id++, radius, color, x, y);
+            p.setV(v);
+            p.setAngle(angle);
+            particleList.add(p);
         }
 
         if (particleList.size() < n) return null;

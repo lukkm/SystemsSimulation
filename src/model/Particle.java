@@ -3,11 +3,19 @@ package model;
 public class Particle {
 
     int id;
-    float radius;
-    float color;
-    float x, y, vx, vy;
+    double radius;
+    double color;
+    double x, y, v, angle;
 
-    public Particle(int id, float radius, float color, float x, float y) {
+    public Particle(int id, double radius, double color, double x, double y) {
+        this.id = id;
+        this.radius = radius;
+        this.color = color;
+        this.x = x;
+        this.y = y;
+    }
+
+    public Particle(int id, double radius, double color, double x, double y, double v, double angle) {
         this.id = id;
         this.radius = radius;
         this.color = color;
@@ -19,40 +27,51 @@ public class Particle {
         return id;
     }
 
-    public float getRadius() {
+    public double getRadius() {
         return radius;
     }
 
-    public float getX() {
+    public double getX() {
         return x;
     }
 
-    public void setX(float x) {
+    public void setX(double x) {
         this.x = x;
     }
 
-    public float getY() {
+    public double getY() {
         return y;
     }
 
-    public void setY(float y) {
+    public void setY(double y) {
         this.y = y;
     }
 
-    public float getVx() {
-        return vx;
+    public double getV() {
+        return v;
     }
 
-    public void setVx(float vx) {
-        this.vx = vx;
+    public void setV(double v) {
+        this.v = v;
     }
 
-    public float getVy() {
-        return vy;
+    public double getVx() {
+        return v * Math.sin(angle);
     }
 
-    public void setVy(float vy) {
-        this.vy = vy;
+    public double getVy() {
+        return v * Math.cos(angle);
     }
 
+    public double getAngle() {
+        return angle;
+    }
+
+    public void setAngle(double angle) {
+        this.angle = angle;
+    }
+
+    public Particle copy() {
+        return new Particle(id, radius, color, x, y, v, angle);
+    }
 }
