@@ -33,9 +33,17 @@ public class FileWriter {
         PrintWriter writer = new PrintWriter(file, "UTF-8");
 
         StringBuilder builder;
-        for (Particle p : particleSetMap.keySet()) {
+        Set<Particle> particles = particleSetMap.keySet();
+        writer.println(particles.size());
+        for (Particle p : particles) {
             builder = new StringBuilder();
-            builder.append(p.getId() == particleId || isNeighbor(particleId, p, particleSetMap) ? "100" : "200");
+            boolean isNeighbor = p.getId() == particleId || isNeighbor(particleId, p, particleSetMap);
+            if (isNeighbor){
+                builder.append("1.0 0.0");//R = 255 G=0
+            }
+            else{
+                builder.append("0.0 1.0");//R=0 G=255
+            }
             builder.append(" ");
             builder.append(p.getX());
             builder.append(" ");
@@ -46,7 +54,6 @@ public class FileWriter {
 
         writer.close();
     }
-
     private static boolean isNeighbor(int particleId, Particle p, Map<Particle, Set<Particle>> particleSetMap) {
         for (Particle p2 : particleSetMap.get(p)) {
             if (p2.getId() == particleId) return true;
