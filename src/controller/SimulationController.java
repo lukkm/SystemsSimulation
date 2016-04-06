@@ -24,11 +24,13 @@ public class SimulationController {
         List<List<Particle>> particleSteps = new ArrayList<>();
         particleSteps.add(particleList);
 
+        List<Particle> lastStep = particleList;
+
         for (int i = 0; i < steps; i++) {
             List<Particle> newStep = new ArrayList<>();
-            for (Particle p : particleList) {
+            for (Particle p : lastStep) {
                 Particle newParticle = p.copy();
-                double angleAverage = getAngleAverage(p);
+                double angleAverage = getAngleAverage(p, lastStep);
                 newX = (p.getX() + p.getVx() * dt) % l;
                 newY = (p.getY() + p.getVy() * dt) % l;
                 newAngle = angleAverage + (Math.random() * n - n/2);
@@ -40,13 +42,14 @@ public class SimulationController {
                 newStep.add(newParticle);
             }
             particleSteps.add(newStep);
+            lastStep = newStep;
         }
 
         return particleSteps;
     }
 
-    private double getAngleAverage(Particle p) {
-        List<Particle> particles = calculateBruteForceNeighbors(p);
+    private double getAngleAverage(Particle p, List<Particle> stepParticles) {
+        List<Particle> particles = calculateBruteForceNeighbors(p, stepParticles);
         double sinSum = 0;
         double cosSum = 0;
         for (Particle p2 : particles) {
@@ -132,9 +135,9 @@ public class SimulationController {
         }
     }
 
-    private List<Particle> calculateBruteForceNeighbors(Particle p) {
+    private List<Particle> calculateBruteForceNeighbors(Particle p, List<Particle> stepParticles) {
         List<Particle> neighbors = new ArrayList<>();
-        for (Particle p2 : particleList) {
+        for (Particle p2 : stepParticles) {
             if (p2 != p && DistanceUtils.calculateDistance(p, p2) < p.getRadius()) neighbors.add(p2);
         }
         return neighbors;

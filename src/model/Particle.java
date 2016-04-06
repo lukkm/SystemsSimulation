@@ -16,11 +16,9 @@ public class Particle {
     }
 
     public Particle(int id, double radius, double color, double x, double y, double v, double angle) {
-        this.id = id;
-        this.radius = radius;
-        this.color = color;
-        this.x = x;
-        this.y = y;
+        this(id, radius, color, x, y);
+        this.v = v;
+        this.angle = angle;
     }
 
     public int getId() {

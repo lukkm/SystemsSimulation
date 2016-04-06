@@ -44,10 +44,6 @@ public class FileWriter {
             builder.append(p.getX());
             builder.append(" ");
             builder.append(p.getY());
-            builder.append(" ");
-            builder.append(p.getVx());
-            builder.append(" ");
-            builder.append(p.getVy());
             builder.append(" 0");
             writer.println(builder.toString());
         }
@@ -69,6 +65,10 @@ public class FileWriter {
                 builder.append(p.getX());
                 builder.append(" ");
                 builder.append(p.getY());
+                builder.append(" ");
+                builder.append(p.getVx());
+                builder.append(" ");
+                builder.append(p.getVy());
                 builder.append(" ");
                 builder.append(p.getRadius());
                 writer.println(builder.toString());
