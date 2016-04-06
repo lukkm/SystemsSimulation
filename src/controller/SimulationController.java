@@ -28,11 +28,15 @@ public class SimulationController {
 
         for (int i = 0; i < steps; i++) {
             List<Particle> newStep = new ArrayList<>();
+            float vx = 0;
+            float vy = 0;
             for (Particle p : lastStep) {
+                vx += p.getVy();
+                vy += p.getVx();
                 Particle newParticle = p.copy();
                 double angleAverage = getAngleAverage(p, lastStep);
-                newX = (p.getX() + p.getVx() * dt) % l;
-                newY = (p.getY() + p.getVy() * dt) % l;
+                newX = (p.getX() + p.getVy() * dt) % l;
+                newY = (p.getY() + p.getVx() * dt) % l;
                 newAngle = angleAverage + (Math.random() * n - n/2);
 
                 newParticle.setX(newX);
@@ -41,6 +45,7 @@ public class SimulationController {
 
                 newStep.add(newParticle);
             }
+            System.out.println(Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2)) * (1/(particleList.size()*0.03)));
             particleSteps.add(newStep);
             lastStep = newStep;
         }
