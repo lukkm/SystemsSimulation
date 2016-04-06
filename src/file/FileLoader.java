@@ -14,7 +14,7 @@ public class FileLoader {
     private static final int MIN_STATIC_FORMAT = 2;
     private static final int MIN_DYNAMIC_FORMAT = 2;
 
-    private static final float DEFAULT_VELOCITY = 0.3f;
+    private static final float DEFAULT_VELOCITY = 0.03f;
 
     public static SimulationController loadFiles(String staticFile, String dynamicFile) throws IOException {
         BufferedReader staticBr = new BufferedReader(new FileReader(staticFile));
