@@ -66,9 +66,9 @@ public class FileWriter {
                 builder.append(" ");
                 builder.append(p.getY());
                 builder.append(" ");
-                builder.append(p.getVx());
-                builder.append(" ");
                 builder.append(p.getVy());
+                builder.append(" ");
+                builder.append(p.getVx());
                 builder.append(" ");
                 builder.append(p.getRadius());
                 writer.println(builder.toString());

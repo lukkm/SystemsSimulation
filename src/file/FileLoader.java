@@ -48,7 +48,7 @@ public class FileLoader {
                 return null;
             }
 
-            radius = Float.valueOf(particleStaticInfo[0]);
+            radius = Float.valueOf(particleStaticInfo[1]);
             color = Float.valueOf(particleStaticInfo[1]);
             x = Float.valueOf(particleDynamicInfo[0]);
             y = Float.valueOf(particleDynamicInfo[1]);

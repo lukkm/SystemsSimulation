@@ -52,7 +52,7 @@ public class Main {
                     file.FileWriter.printToGraphicFile("Graphic.txt", closeParticles, particleId);
                     break;
                 case SIMULATE_MODE:
-                    List<List<Particle>> particleSteps = board.simulateSteps(200, 1, 2);
+                    List<List<Particle>> particleSteps = board.simulateSteps(500, 1, 2);
                     file.FileWriter.printStepsToGraphicFile(outputFile, particleSteps);
                     break;
             }

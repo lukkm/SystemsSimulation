@@ -53,11 +53,11 @@ public class Particle {
         this.v = v;
     }
 
-    public double getVx() {
+    public double getVy() {
         return v * Math.sin(angle);
     }
 
-    public double getVy() {
+    public double getVx() {
         return v * Math.cos(angle);
     }
 
