@@ -1,6 +1,7 @@
 import file.FileLoader;
 import model.Particle;
 import controller.SimulationController;
+import utils.DistanceUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,10 +12,12 @@ public class Main {
 
     private static final int CALCULATE_DISTANCE_MODE = 0;
     private static final int SIMULATE_MODE = 1;
+    private static final int COLLISION_MODE = 2;
 
     public static void main(String[] args) {
-        if (args.length < 7) {
-            System.out.println("Input: mode <static file> <dynamic file> <output file> M rC crossMap particleId");
+        if (args.length < 9) {
+            System.out.println(
+                    "Input: mode <static file> <dynamic file> <output file> M rC crossMap hasMass velocityRange");
             return;
         }
 
@@ -25,10 +28,11 @@ public class Main {
         int M = Integer.valueOf(args[4]);
         float rC = Float.valueOf(args[5]);
         boolean crossMap = Integer.valueOf(args[6]) != 0;
-        int particleId = Integer.valueOf(args[7]);
+        boolean hasMass = Integer.valueOf(args[7]) != 0;
+        float velocityRange = Float.valueOf(args[8]);
 
         try {
-            SimulationController board = FileLoader.loadFiles(staticFile, dynamicFile);
+            SimulationController board = FileLoader.loadFiles(staticFile, dynamicFile, hasMass, velocityRange);
             if (board == null) {
                 System.out.println("Invalid file format");
                 return;
@@ -37,7 +41,7 @@ public class Main {
             switch (mode) {
                 case CALCULATE_DISTANCE_MODE:
                     long bruteForceTime = System.currentTimeMillis();
-                    board.calculateBruteForceDistance(rC);
+                    DistanceUtils.calculateBruteForceDistance(board.getParticleList(), rC);
                     long bruteForceTime2 = System.currentTimeMillis();
 
                     long time = System.currentTimeMillis();
@@ -49,11 +53,15 @@ public class Main {
                     System.out.println(String.format("Elapsed time for Cell Index Method Algorithm: %d ms", time2 - time));
 
                     file.FileWriter.printToFile(outputFile, closeParticles);
-                    file.FileWriter.printToGraphicFile("Graphic.txt", closeParticles, particleId);
+                    file.FileWriter.printToGraphicFile("Graphic.txt", closeParticles, 0);
                     break;
                 case SIMULATE_MODE:
                     List<List<Particle>> particleSteps = board.simulateSteps(500, 1, 2);
                     file.FileWriter.printStepsToGraphicFile(outputFile, particleSteps);
+                    break;
+                case COLLISION_MODE:
+                    List<List<Particle>> particleCollisions = board.simulateCollisions(500);
+                    file.FileWriter.printStepsToGraphicFile(outputFile, particleCollisions);
                     break;
             }
 

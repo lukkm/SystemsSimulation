@@ -12,11 +12,13 @@ import java.util.List;
 public class FileLoader {
 
     private static final int MIN_STATIC_FORMAT = 2;
+    private static final int MIN_STATIC_MASS_FORMAT = 3;
     private static final int MIN_DYNAMIC_FORMAT = 2;
 
     private static final float DEFAULT_VELOCITY = 0.03f;
 
-    public static SimulationController loadFiles(String staticFile, String dynamicFile) throws IOException {
+    public static SimulationController loadFiles(
+            String staticFile, String dynamicFile, boolean hasMass, float randomizeVelocity) throws IOException {
         BufferedReader staticBr = new BufferedReader(new FileReader(staticFile));
         BufferedReader dynamicBr = new BufferedReader(new FileReader(dynamicFile));
 
@@ -35,7 +37,7 @@ public class FileLoader {
         List<Particle> particleList = new ArrayList<>();
         String[] particleStaticInfo;
         String[] particleDynamicInfo;
-        double radius, color, x, y;
+        double radius, color, x, y, mass;
         int id = 1;
 
         while ((staticLine = staticBr.readLine()) != null
@@ -44,21 +46,30 @@ public class FileLoader {
             particleStaticInfo = staticLine.trim().split("\\s+");
             particleDynamicInfo = dynamicLine.trim().split("\\s+");
 
-            if (particleStaticInfo.length < MIN_STATIC_FORMAT || particleDynamicInfo.length < MIN_DYNAMIC_FORMAT) {
+            if (particleStaticInfo.length < MIN_STATIC_FORMAT
+                    || (hasMass && particleStaticInfo.length < MIN_STATIC_MASS_FORMAT)
+                    || particleDynamicInfo.length < MIN_DYNAMIC_FORMAT) {
                 return null;
             }
 
-            radius = Float.valueOf(particleStaticInfo[1]);
+            radius = Float.valueOf(particleStaticInfo[0]);
             color = Float.valueOf(particleStaticInfo[1]);
+            mass = hasMass ? Float.valueOf(particleStaticInfo[2]) : 0;
             x = Float.valueOf(particleDynamicInfo[0]);
             y = Float.valueOf(particleDynamicInfo[1]);
 
-            float v = DEFAULT_VELOCITY;
             float angle = (float) (Math.random() * 2 * Math.PI);
 
             Particle p = new Particle(id++, radius, color, x, y);
-            p.setV(v);
+
+            if (randomizeVelocity != 0) {
+                p.setVx((Math.random() * randomizeVelocity * 2) - randomizeVelocity);
+                p.setVy((Math.random() * randomizeVelocity * 2) - randomizeVelocity);
+            } else {
+                p.setV(DEFAULT_VELOCITY);
+            }
             p.setAngle(angle);
+            if (hasMass) p.setMass(mass);
             particleList.add(p);
         }
 

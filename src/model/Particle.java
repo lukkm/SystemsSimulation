@@ -6,6 +6,8 @@ public class Particle {
     double radius;
     double color;
     double x, y, v, angle;
+    Double vx, vy;
+    double mass;
 
     public Particle(int id, double radius, double color, double x, double y) {
         this.id = id;
@@ -19,6 +21,23 @@ public class Particle {
         this(id, radius, color, x, y);
         this.v = v;
         this.angle = angle;
+    }
+
+    public Particle(
+            int id,
+            double radius,
+            double color,
+            double x,
+            double y,
+            double v,
+            double angle,
+            double mass,
+            double vx,
+            double vy) {
+        this(id, radius, color, x, y, v, angle);
+        this.mass = mass;
+        this.vx = vx;
+        this.vy = vy;
     }
 
     public int getId() {
@@ -53,12 +72,20 @@ public class Particle {
         this.v = v;
     }
 
-    public double getVy() {
-        return v * Math.sin(angle);
+    public void setVx(Double vx) {
+        this.vx = vx;
     }
 
     public double getVx() {
-        return v * Math.cos(angle);
+        return vx != null ? vx : v * Math.cos(angle);
+    }
+
+    public void setVy(Double vy) {
+        this.vy = vy;
+    }
+
+    public double getVy() {
+        return vy != null ? vy : v * Math.sin(angle);
     }
 
     public double getAngle() {
@@ -69,7 +96,15 @@ public class Particle {
         this.angle = angle;
     }
 
+    public double getMass() {
+        return mass;
+    }
+
+    public void setMass(double mass) {
+        this.mass = mass;
+    }
+
     public Particle copy() {
-        return new Particle(id, radius, color, x, y, v, angle);
+        return new Particle(id, radius, color, x, y, v, angle, mass, vx, vy);
     }
 }

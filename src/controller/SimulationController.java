@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import model.Particle;
-import utils.DistanceUtils;
+import utils.AngleUtils;
+import utils.CollisionUtils;
+import utils.NeighborUtils;
 
 import java.util.*;
 
@@ -16,6 +18,79 @@ public class SimulationController {
     public SimulationController(float l, List<Particle> particleList) {
         this.l = l;
         this.particleList = particleList;
+    }
+
+    public List<Particle> getParticleList() {
+        return particleList;
+    }
+
+    public List<List<Particle>> simulateCollisions(int steps) {
+        double dt = 0.1;
+        List<List<Particle>> particleSteps = new ArrayList<>();
+        List<Particle> lastStep = particleList;
+        particleSteps.add(particleList);
+        for (int i = 0; i < steps; i++) {
+            CollisionUtils.CollidingParticleTime nextParticleCollision =
+                    CollisionUtils.getNextParticleCollisionTime(lastStep);
+            CollisionUtils.CollidingParticleTime nextWallCollision =
+                    CollisionUtils.getNextWallCollisionTime(lastStep, l);
+
+            CollisionUtils.CollidingParticleTime nextCollision =
+                    (nextParticleCollision.getTime() != -1
+                            && nextParticleCollision .getTime() < nextWallCollision.getTime()) ?
+                            nextParticleCollision : nextWallCollision;
+
+            if (nextCollision.getTime() > dt) {
+                // Evolve particles
+                List<Particle> newStep = new ArrayList<>();
+                for (Particle p : lastStep) {
+                    Particle newParticle = p.copy();
+                    newParticle.setX(p.getX() + p.getVx() * dt);
+                    newParticle.setY(p.getY() + p.getVy() * dt);
+                    newStep.add(newParticle);
+                }
+
+                particleSteps.add(newStep);
+                lastStep = newStep;
+            } else {
+                // Evolve particles
+                List<Particle> newStep = new ArrayList<>();
+                for (Particle p : lastStep) {
+                    Particle newParticle = p.copy();
+                    newParticle.setX(p.getX() + p.getVx() * nextCollision.getTime());
+                    newParticle.setY(p.getY() + p.getVy() * nextCollision.getTime());
+
+                    // Set the new particles to be updated
+                    if (p.getId() == nextCollision.getP1().getId()) {
+                        nextCollision.setP1(newParticle);
+                    }
+                    if (nextCollision.getP2() != null && p.getId() == nextCollision.getP2().getId()) {
+                        nextCollision.setP2(newParticle);
+                    }
+
+                    newStep.add(newParticle);
+                }
+
+                // Collide!
+                if (nextCollision.getP2() == null) {
+                    // Wall collision
+                    Particle p = nextCollision.getP1();
+                    if (nextCollision.isxCollision()) {
+                        p.setVx(-p.getVx());
+                    } else {
+                        p.setVy(-p.getVy());
+                    }
+                } else {
+                    // Particle collision
+                    CollisionUtils.collideParticles(nextParticleCollision);
+                }
+
+                particleSteps.add(newStep);
+                lastStep = newStep;
+            }
+        }
+
+        return particleSteps;
     }
 
     public List<List<Particle>> simulateSteps(int steps, double dt, double n) {
@@ -30,7 +105,7 @@ public class SimulationController {
             List<Particle> newStep = new ArrayList<>();
             for (Particle p : lastStep) {
                 Particle newParticle = p.copy();
-                double angleAverage = getAngleAverage(p, lastStep);
+                double angleAverage = AngleUtils.getAngleAverage(p, lastStep);
                 newX = ((p.getX() + p.getVy() * dt) + l) % l;
                 newY = ((p.getY() + p.getVx() * dt) + l) % l;
                 newAngle = angleAverage + (Math.random() * n - n/2);
@@ -46,20 +121,6 @@ public class SimulationController {
         }
 
         return particleSteps;
-    }
-
-    private double getAngleAverage(Particle p, List<Particle> stepParticles) {
-        List<Particle> particles = calculateBruteForceNeighbors(p, stepParticles);
-        double sinSum = 0;
-        double cosSum = 0;
-        for (Particle p2 : particles) {
-            sinSum += Math.sin(p2.getAngle());
-            cosSum += Math.cos(p2.getAngle());
-        }
-        sinSum += Math.sin(p.getAngle());
-        cosSum += Math.cos(p.getAngle());
-
-        return Math.atan2((sinSum / (particles.size() + 1)), (cosSum / (particles.size() + 1)));
     }
 
     @SuppressWarnings("unchecked")
@@ -84,87 +145,15 @@ public class SimulationController {
             for(int j = 0; j < m; j++) {
                 List<Particle> cellParticles = cells[i][j];
 
-                calculateNeighbors(cellParticles, closeParticles, cells, i, j, rc, crossMap);
-                calculateNeighbors(cellParticles, closeParticles, cells, i + 1, j, rc, crossMap);
-                calculateNeighbors(cellParticles, closeParticles, cells, i + 1, j + 1, rc, crossMap);
-                calculateNeighbors(cellParticles, closeParticles, cells, i, j + 1, rc, crossMap);
-                calculateNeighbors(cellParticles, closeParticles, cells, i + 1, j - 1, rc, crossMap);
+                NeighborUtils.calculateNeighbors(cellParticles, closeParticles, cells, l, i, j, rc, crossMap);
+                NeighborUtils.calculateNeighbors(cellParticles, closeParticles, cells, l, i + 1, j, rc, crossMap);
+                NeighborUtils.calculateNeighbors(cellParticles, closeParticles, cells, l, i + 1, j + 1, rc, crossMap);
+                NeighborUtils.calculateNeighbors(cellParticles, closeParticles, cells, l, i, j + 1, rc, crossMap);
+                NeighborUtils.calculateNeighbors(cellParticles, closeParticles, cells, l, i + 1, j - 1, rc, crossMap);
             }
         }
 
         return closeParticles;
-    }
-
-    private void calculateNeighbors(
-            List<Particle> particles, Map<Particle,
-            Set<Particle>> particleSetMap,
-            List<Particle>[][] cells,
-            int i,
-            int j,
-            float rc,
-            boolean crossMap) {
-        if (particles == null) return;
-
-        List<Particle> cellParticles = cells[normalize(i, cells.length)][normalize(j, cells.length)];
-        boolean crossX = false;
-        boolean crossY = false;
-        if (i < 0 || i >= cells.length) {
-            if (!crossMap) return;
-            crossX = true;
-        }
-
-        if (j < 0 || j >= cells.length) {
-            if (!crossMap) return;
-            crossY = true;
-        }
-
-        if (cellParticles == null) return;
-
-        for (Particle p1 : particles) {
-            if (!particleSetMap.containsKey(p1)) particleSetMap.put(p1, new HashSet<>());
-            for (Particle p2 : cellParticles) {
-                if (!particleSetMap.containsKey(p2)) particleSetMap.put(p2, new HashSet<>());
-                if (p1 != p2) {
-                    if (isNeighbor(p1, p2, particleSetMap)
-                            || DistanceUtils.calculateDistance(p1, p2, crossX, crossY, l) < rc) {
-                        particleSetMap.get(p1).add(p2);
-                        particleSetMap.get(p2).add(p1);
-                    }
-                }
-            }
-        }
-    }
-
-    private List<Particle> calculateBruteForceNeighbors(Particle p, List<Particle> stepParticles) {
-        List<Particle> neighbors = new ArrayList<>();
-        for (Particle p2 : stepParticles) {
-            if (p2 != p && DistanceUtils.calculateDistance(p, p2) < p.getRadius()) neighbors.add(p2);
-        }
-        return neighbors;
-    }
-
-    public Map<Particle, Set<Particle>> calculateBruteForceDistance(float rc) {
-        Map<Particle, Set<Particle>> closeParticles = new LinkedHashMap<>();
-        for (Particle p1 : particleList) {
-            closeParticles.put(p1, new HashSet<>());
-            for (Particle p2 : particleList) {
-                if (p1 != p2) {
-                    if (isNeighbor(p1, p2, closeParticles) || DistanceUtils.calculateDistance(p1, p2) < rc)
-                        closeParticles.get(p1).add(p2);
-                }
-            }
-        }
-        return closeParticles;
-    }
-
-    private boolean isNeighbor(Particle p1, Particle p2, Map<Particle, Set<Particle>> particleSetMap) {
-        return (particleSetMap.containsKey(p1) && particleSetMap.get(p1).contains(p2))
-                || (particleSetMap.containsKey(p2) && particleSetMap.get(p2).contains(p1));
-    }
-
-    private int normalize(int position, int size) {
-        if (position < 0) return position + size;
-        return position % size;
     }
 
 }

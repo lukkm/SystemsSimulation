@@ -2,6 +2,8 @@ package utils;
 
 import model.Particle;
 
+import java.util.*;
+
 public class DistanceUtils {
 
     public static double calculateDistance(Particle p1, Particle p2, boolean crossX, boolean crossY, float l) {
@@ -17,6 +19,21 @@ public class DistanceUtils {
 
     private static double calculateDistance(double x1, double y1, double r1, double x2, double y2, double r2) {
         return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)) - r1 - r2;
+    }
+
+    public static Map<Particle, Set<Particle>> calculateBruteForceDistance(List<Particle> particleList, float rc) {
+        Map<Particle, Set<Particle>> closeParticles = new LinkedHashMap<>();
+        for (Particle p1 : particleList) {
+            closeParticles.put(p1, new HashSet<>());
+            for (Particle p2 : particleList) {
+                if (p1 != p2) {
+                    if (NeighborUtils.isNeighbor(p1, p2, closeParticles)
+                            || DistanceUtils.calculateDistance(p1, p2) < rc)
+                        closeParticles.get(p1).add(p2);
+                }
+            }
+        }
+        return closeParticles;
     }
 
 }
