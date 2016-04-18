@@ -54,6 +54,7 @@ public class CollisionUtils {
 
         double xCollisionTime, yCollisionTime, collisionTime;
         for (Particle p : particleList) {
+            if (p.getVx() == 0 && p.getVy() == 0) continue;
             xCollisionTime = p.getVx() > 0 ?
                     (l - p.getRadius() - p.getX()) / p.getVx() : (p.getRadius() - p.getX()) / p.getVx();
             yCollisionTime = p.getVy() > 0 ?

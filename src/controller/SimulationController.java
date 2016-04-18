@@ -12,7 +12,7 @@ import java.util.*;
 
 public class SimulationController {
 
-    private float l;
+    private final float l;
     private List<Particle> particleList;
 
     public SimulationController(float l, List<Particle> particleList) {
@@ -80,8 +80,6 @@ public class SimulationController {
                     }
                     currentTime -= nextCollision.getTime();
 
-                    System.out.println(i);
-
                     // Recalculate next collision
                     nextCollision = CollisionUtils.getNextCollision(newStep, l);
 
@@ -89,7 +87,6 @@ public class SimulationController {
                     lastStep = new ArrayList<>(newStep);
                 }
                 particleSteps.add(newStep);
-
             }
         }
 
