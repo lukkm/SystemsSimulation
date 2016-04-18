@@ -27,66 +27,69 @@ public class SimulationController {
     public List<List<Particle>> simulateCollisions(int steps) {
         double dt = 0.1;
         List<List<Particle>> particleSteps = new ArrayList<>();
-        List<Particle> lastStep = particleList;
+        List<Particle> lastStep = new ArrayList<>(particleList);
         particleSteps.add(particleList);
         for (int i = 0; i < steps; i++) {
-            CollisionUtils.CollidingParticleTime nextParticleCollision =
-                    CollisionUtils.getNextParticleCollisionTime(lastStep);
-            CollisionUtils.CollidingParticleTime nextWallCollision =
-                    CollisionUtils.getNextWallCollisionTime(lastStep, l);
-
-            CollisionUtils.CollidingParticleTime nextCollision =
-                    (nextParticleCollision.getTime() != -1
-                            && nextParticleCollision .getTime() < nextWallCollision.getTime()) ?
-                            nextParticleCollision : nextWallCollision;
+            CollisionUtils.CollidingParticleTime nextCollision = CollisionUtils.getNextCollision(lastStep, l);
 
             if (nextCollision.getTime() > dt) {
                 // Evolve particles
                 List<Particle> newStep = new ArrayList<>();
                 for (Particle p : lastStep) {
-                    Particle newParticle = p.copy();
-                    newParticle.setX(p.getX() + p.getVx() * dt);
-                    newParticle.setY(p.getY() + p.getVy() * dt);
+                    Particle newParticle = evolveParticle(p, dt);
                     newStep.add(newParticle);
                 }
 
                 particleSteps.add(newStep);
-                lastStep = newStep;
+                lastStep = new ArrayList<>(newStep);
             } else {
-                // Evolve particles
+                // Initialize current time
+                double currentTime = dt;
                 List<Particle> newStep = new ArrayList<>();
-                for (Particle p : lastStep) {
-                    Particle newParticle = p.copy();
-                    newParticle.setX(p.getX() + p.getVx() * nextCollision.getTime());
-                    newParticle.setY(p.getY() + p.getVy() * nextCollision.getTime());
+                while (nextCollision.getTime() < currentTime) {
+                    // Start new step
+                    newStep.clear();
 
-                    // Set the new particles to be updated
-                    if (p.getId() == nextCollision.getP1().getId()) {
-                        nextCollision.setP1(newParticle);
+                    // Evolve particles
+                    for (Particle p : lastStep) {
+                        Particle newParticle = evolveParticle(p, nextCollision.getTime());
+
+                        // Set the new particles to be updated
+                        if (p.getId() == nextCollision.getP1().getId()) {
+                            nextCollision.setP1(newParticle);
+                        }
+                        if (nextCollision.getP2() != null && p.getId() == nextCollision.getP2().getId()) {
+                            nextCollision.setP2(newParticle);
+                        }
+
+                        newStep.add(newParticle);
                     }
-                    if (nextCollision.getP2() != null && p.getId() == nextCollision.getP2().getId()) {
-                        nextCollision.setP2(newParticle);
-                    }
 
-                    newStep.add(newParticle);
-                }
-
-                // Collide!
-                if (nextCollision.getP2() == null) {
-                    // Wall collision
-                    Particle p = nextCollision.getP1();
-                    if (nextCollision.isxCollision()) {
-                        p.setVx(-p.getVx());
+                    // Collide!
+                    if (nextCollision.getP2() == null) {
+                        // Wall collision
+                        Particle p = nextCollision.getP1();
+                        if (nextCollision.isxCollision()) {
+                            p.setVx(-p.getVx());
+                        } else {
+                            p.setVy(-p.getVy());
+                        }
                     } else {
-                        p.setVy(-p.getVy());
+                        // Particle collision
+                        CollisionUtils.collideParticles(nextCollision);
                     }
-                } else {
-                    // Particle collision
-                    CollisionUtils.collideParticles(nextParticleCollision);
-                }
+                    currentTime -= nextCollision.getTime();
 
+                    System.out.println(i);
+
+                    // Recalculate next collision
+                    nextCollision = CollisionUtils.getNextCollision(newStep, l);
+
+                    // Move steps along
+                    lastStep = new ArrayList<>(newStep);
+                }
                 particleSteps.add(newStep);
-                lastStep = newStep;
+
             }
         }
 
@@ -99,7 +102,7 @@ public class SimulationController {
         List<List<Particle>> particleSteps = new ArrayList<>();
         particleSteps.add(particleList);
 
-        List<Particle> lastStep = particleList;
+        List<Particle> lastStep = new ArrayList<>(particleList);
 
         for (int i = 0; i < steps; i++) {
             List<Particle> newStep = new ArrayList<>();
@@ -117,7 +120,7 @@ public class SimulationController {
                 newStep.add(newParticle);
             }
             particleSteps.add(newStep);
-            lastStep = newStep;
+            lastStep = new ArrayList<>(newStep);
         }
 
         return particleSteps;
@@ -154,6 +157,13 @@ public class SimulationController {
         }
 
         return closeParticles;
+    }
+
+    private Particle evolveParticle(Particle p, double time) {
+        Particle newParticle = p.copy();
+        newParticle.setX(p.getX() + p.getVx() * time);
+        newParticle.setY(p.getY() + p.getVy() * time);
+        return newParticle;
     }
 
 }

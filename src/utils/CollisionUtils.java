@@ -85,7 +85,7 @@ public class CollisionUtils {
         deltaR = new double[] {deltaX, deltaY};
         deltaV = new double[] {p1.getVx() - p2.getVx(), p1.getVy() - p2.getVy()};
 
-        deltaVR = deltaR[0] * deltaV[0] + deltaR[1] * deltaV[1];
+        deltaVR = (deltaR[0] * deltaV[0]) + (deltaR[1] * deltaV[1]);
 
         sigma = p1.getRadius() + p2.getRadius();
 
@@ -93,10 +93,10 @@ public class CollisionUtils {
         jX = (J * deltaX) / sigma;
         jY = (J * deltaY) / sigma;
 
-        p1.setVx(p1.getVx() + (jX / p1.getMass()));
-        p1.setVy(p1.getVy() + (jY / p1.getMass()));
-        p2.setVx(p1.getVx() + (jX / p2.getMass()));
-        p2.setVy(p1.getVy() + (jY / p2.getMass()));
+        p1.setVx(p1.getVx() - (jX / p1.getMass()));
+        p1.setVy(p1.getVy() - (jY / p1.getMass()));
+        p2.setVx(p2.getVx() + (jX / p2.getMass()));
+        p2.setVy(p2.getVy() + (jY / p2.getMass()));
     }
 
     public static class CollidingParticleTime {
@@ -133,6 +133,17 @@ public class CollisionUtils {
         public boolean isxCollision() {
             return xCollision;
         }
+    }
+
+    public static CollidingParticleTime getNextCollision(List<Particle> particleList, float l) {
+        CollisionUtils.CollidingParticleTime nextParticleCollision =
+                CollisionUtils.getNextParticleCollisionTime(particleList);
+        CollisionUtils.CollidingParticleTime nextWallCollision =
+                CollisionUtils.getNextWallCollisionTime(particleList, l);
+
+        return (nextParticleCollision.getTime() != -1
+                && nextParticleCollision.getTime() < nextWallCollision.getTime()) ?
+                        nextParticleCollision : nextWallCollision;
     }
 
 }

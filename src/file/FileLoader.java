@@ -16,6 +16,7 @@ public class FileLoader {
     private static final int MIN_DYNAMIC_FORMAT = 2;
 
     private static final float DEFAULT_VELOCITY = 0.03f;
+    private static final int SMALL_MASS = 2;
 
     public static SimulationController loadFiles(
             String staticFile, String dynamicFile, boolean hasMass, float randomizeVelocity) throws IOException {
@@ -58,18 +59,20 @@ public class FileLoader {
             x = Float.valueOf(particleDynamicInfo[0]);
             y = Float.valueOf(particleDynamicInfo[1]);
 
-            float angle = (float) (Math.random() * 2 * Math.PI);
-
             Particle p = new Particle(id++, radius, color, x, y);
+            if (hasMass) p.setMass(mass);
 
+            // Set velocity
             if (randomizeVelocity != 0) {
-                p.setVx((Math.random() * randomizeVelocity * 2) - randomizeVelocity);
-                p.setVy((Math.random() * randomizeVelocity * 2) - randomizeVelocity);
+                p.setVx(p.getMass() < SMALL_MASS ?
+                        (Math.random() * randomizeVelocity * 2) - randomizeVelocity : 0);
+                p.setVy(p.getMass() < SMALL_MASS ?
+                        (Math.random() * randomizeVelocity * 2) - randomizeVelocity : 0);
             } else {
                 p.setV(DEFAULT_VELOCITY);
+                p.setAngle((float) (Math.random() * 2 * Math.PI));
             }
-            p.setAngle(angle);
-            if (hasMass) p.setMass(mass);
+
             particleList.add(p);
         }
 
