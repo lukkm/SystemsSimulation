@@ -68,6 +68,10 @@ public class Particle {
         return v;
     }
 
+    public double getCalculatedV() {
+        return Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
+    }
+
     public void setV(double v) {
         this.v = v;
     }

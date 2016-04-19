@@ -56,9 +56,11 @@ public class CollisionUtils {
         for (Particle p : particleList) {
             if (p.getVx() == 0 && p.getVy() == 0) continue;
             xCollisionTime = p.getVx() > 0 ?
-                    (l - p.getRadius() - p.getX()) / p.getVx() : (p.getRadius() - p.getX()) / p.getVx();
+                    Math.abs((l - (p.getRadius() + p.getX())) / p.getVx())
+                    : Math.abs((p.getRadius() - p.getX()) / p.getVx());
             yCollisionTime = p.getVy() > 0 ?
-                    (l - p.getRadius() - p.getY()) / p.getVy() : (p.getRadius() - p.getY()) / p.getVy();
+                    Math.abs((l - (p.getRadius() + p.getY())) / p.getVy())
+                    : Math.abs((p.getRadius() - p.getY()) / p.getVy());
             collisionTime = Math.min(xCollisionTime, yCollisionTime);
             if (nextCollisionTime < 0 || collisionTime < nextCollisionTime) {
                 nextCollisionTime = collisionTime;
@@ -68,6 +70,7 @@ public class CollisionUtils {
             }
         }
 
+        particleTime.time = particleTime.time - 0.001;
         return particleTime;
     }
 

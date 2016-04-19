@@ -158,6 +158,7 @@ public class SimulationController {
 
     private Particle evolveParticle(Particle p, double time) {
         Particle newParticle = p.copy();
+
         newParticle.setX(p.getX() + p.getVx() * time);
         newParticle.setY(p.getY() + p.getVy() * time);
         return newParticle;
