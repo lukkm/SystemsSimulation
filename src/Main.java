@@ -2,6 +2,7 @@ import file.FileLoader;
 import model.Particle;
 import controller.SimulationController;
 import utils.DistanceUtils;
+import utils.OrbitUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,26 +14,42 @@ public class Main {
     private static final int CALCULATE_DISTANCE_MODE = 0;
     private static final int SIMULATE_MODE = 1;
     private static final int COLLISION_MODE = 2;
+    private static final int ORBIT_MODE = 3;
 
     public static void main(String[] args) {
-        if (args.length < 9) {
-            System.out.println(
-                    "Input: mode <static file> <dynamic file> <output file> M rC crossMap hasMass velocityRange");
-            return;
+        int mode = Integer.valueOf(args[0]);
+
+        String staticFile = null;
+        String dynamicFile = null;
+        String outputFile = null;
+        int M = 1;
+        float rC = 1f;
+        boolean crossMap = false;
+        boolean hasMass = false;
+        float velocityRange = 0.1f;
+
+        float l = 1100f;
+        int N = 0;
+
+        if (mode != ORBIT_MODE) {
+            staticFile = args[1];
+            dynamicFile = args[2];
+            outputFile = args[3];
+            M = Integer.valueOf(args[4]);
+            rC = Float.valueOf(args[5]);
+            crossMap = Integer.valueOf(args[6]) != 0;
+            hasMass = Integer.valueOf(args[7]) != 0;
+            velocityRange = Float.valueOf(args[8]);
+        } else {
+            l = Float.valueOf(args[1]);
+            N = Integer.valueOf(args[2]);
+            outputFile = args[3];
         }
 
-        int mode = Integer.valueOf(args[0]);
-        String staticFile = args[1];
-        String dynamicFile = args[2];
-        String outputFile = args[3];
-        int M = Integer.valueOf(args[4]);
-        float rC = Float.valueOf(args[5]);
-        boolean crossMap = Integer.valueOf(args[6]) != 0;
-        boolean hasMass = Integer.valueOf(args[7]) != 0;
-        float velocityRange = Float.valueOf(args[8]);
-
         try {
-            SimulationController board = FileLoader.loadFiles(staticFile, dynamicFile, hasMass, velocityRange);
+            SimulationController board = (mode != ORBIT_MODE) ?
+                    FileLoader.loadFiles(staticFile, dynamicFile, hasMass, velocityRange) :
+                    OrbitUtils.generateOrbitBoard(l, N);
             if (board == null) {
                 System.out.println("Invalid file format");
                 return;
@@ -62,6 +79,10 @@ public class Main {
                 case COLLISION_MODE:
                     List<List<Particle>> particleCollisions = board.simulateCollisions(500);
                     file.FileWriter.printStepsToGraphicFile(outputFile, particleCollisions);
+                    break;
+                case ORBIT_MODE:
+                    List<List<Particle>> orbitParticles = board.simulateOrbits(500);
+                    file.FileWriter.printStepsToGraphicFile(outputFile, orbitParticles);
                     break;
             }
 

@@ -7,6 +7,7 @@ import model.Particle;
 import utils.AngleUtils;
 import utils.CollisionUtils;
 import utils.NeighborUtils;
+import utils.OrbitUtils;
 
 import java.util.*;
 
@@ -14,14 +15,58 @@ public class SimulationController {
 
     private final float l;
     private List<Particle> particleList;
+    private Particle sun;
+    private double orbitL;
+
+    public SimulationController(float l) {
+        this.l = l;
+        particleList = new ArrayList<>();
+    }
 
     public SimulationController(float l, List<Particle> particleList) {
-        this.l = l;
+        this(l);
         this.particleList = particleList;
+    }
+
+    public void addPartcile(Particle p) {
+        particleList.add(p);
+    }
+
+    public void setSun(Particle sun) {
+        this.sun = sun;
+    }
+
+    public void setOrbitL(double orbitL) {
+        this.orbitL = orbitL;
     }
 
     public List<Particle> getParticleList() {
         return particleList;
+    }
+
+    public List<List<Particle>> simulateOrbits(int steps) {
+        List<List<Particle>> particleSteps = new ArrayList<>();
+        List<Particle> lastStep = new ArrayList<>(particleList);
+        particleSteps.add(particleList);
+
+        float dt = 400f;
+
+        for (int i = 0; i < steps; i++) {
+            List<Particle> newStep = new ArrayList<>();
+            newStep.add(sun);
+            for (Particle p : lastStep) {
+                Particle newParticle = evolveParticle(p, dt);
+
+                if (p != sun) {
+                    OrbitUtils.updateVelocity(sun, newParticle, orbitL);
+                    newStep.add(newParticle);
+                }
+            }
+            particleSteps.add(newStep);
+            lastStep = newStep;
+        }
+
+        return particleSteps;
     }
 
     public List<List<Particle>> simulateCollisions(int steps) {

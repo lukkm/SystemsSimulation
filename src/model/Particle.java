@@ -32,8 +32,8 @@ public class Particle {
             double v,
             double angle,
             double mass,
-            double vx,
-            double vy) {
+            Double vx,
+            Double vy) {
         this(id, radius, color, x, y, v, angle);
         this.mass = mass;
         this.vx = vx;
