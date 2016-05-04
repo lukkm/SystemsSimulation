@@ -62,6 +62,34 @@ sum ( abs(r(:,1)-euler(:,1)).^2) / steps_r
 input("Continue?")
 save dampingEuler.txt euler(:,1:2)
 
+######### Predictor corrector Euler Modificado  ###############
+#######   Format: position, time, velocity       ##############
+###############################################################
+t = 0;
+i = 2;
+predictor(1,1) = r0;
+predictor(1,2) = t;
+predictor(1,3) = v0;
+f0= -k * r0 - gamma* v0;
+while t < tf
+	f = -k * predictor(i-1,1) - gamma * predictor(i-1,3);
+	predictor(i,3) =  predictor(i-1,3) + (f/m) *dt;
+	predictor(i,1) =  predictor(i-1,1) + predictor(i-1,3)  * dt;
+
+	at_p1 = (-k * predictor(i,1) - gamma * predictor(i,3))/m;
+
+	predictor(i,3) =  predictor(i-1,3) + at_p1 * dt;
+	predictor(i,1) =  predictor(i-1,1)  + predictor(i,3)*dt;
+	t = t + dt;
+	i++;
+end
+plot(predictor(:,2),predictor(:,1),'k;Predictor-Corrector Euler;')
+xlabel("Tiempo");ylabel("Posicion");
+
+plot(r(:,2),r(:,1),'r;Analitico ;',predictor(:,2),predictor(:,1),'k;Predictor-Corrector Euler;')
+xlabel("Tiempo");ylabel("Posicion");
+sum ( abs(r(:,1)-predictor(:,1)).^2) / steps_r
+
 
 ############## Beeman ####################
 # Format: position, time, velocity #######
@@ -151,4 +179,5 @@ sum ( (r(:,1)-verlet(2:steps_ver,1)).^2) / steps_r
 
 input("Finish?")
 save dampingVerlet.txt verlet
-plot(r(:,2),r(:,1),'r;Analitico ;',euler(:,2),euler(:,1),'g;Euler ;',beeman(2:steps_bee,2),beeman(2:steps_bee,1),'c;Beeman ;',verlet(2:steps_ver,2),verlet(2:steps_ver,1),'m;Verlet ;');
+plot(r(:,2),r(:,1),'r;Analitico ;',euler(:,2),euler(:,1),'g;Euler ;',predictor(:,2),predictor(:,1),'k;Predictor-Corrector Euler;',beeman(2:steps_bee,2),beeman(2:steps_bee,1),'c;Beeman ;',verlet(2:steps_ver,2),verlet(2:steps_ver,1),'m;Verlet ;');
+xlabel("Tiempo");ylabel("Posicion");
