@@ -27,10 +27,12 @@ while t < tf
 	t = t + dt;
 	i++;
 end
+steps_r = size(r,1);
+xlabel("Tiempo");ylabel("Posicion");
 plot(r(:,2),r(:,1),'r;Analitico ;')
 
 input("Continue?")
-#save dampingExact.txt r
+save dampingExact.txt r
 
 ################# Euler  #################
 # Format: position, time, velocity #######
@@ -49,10 +51,16 @@ while t < tf
 	t = t + dt;
 	i++;
 end
-plot(euler(:,2),euler(:,1),'br;Euler ;')
+steps_eul = size(euler,1);
+plot(euler(:,2),euler(:,1),'g;Euler ;')
+xlabel("Tiempo");ylabel("Posicion");
+
+plot(r(:,2),r(:,1),'r;Analitico ;',euler(:,2),euler(:,1),'g-;Euler ;');
+xlabel("Tiempo");ylabel("Posicion");
+sum ( abs(r(:,1)-euler(:,1)).^2) / steps_r
 
 input("Continue?")
-#save dampingEuler.txt euler(:,1:2)
+save dampingEuler.txt euler(:,1:2)
 
 
 ############## Beeman ####################
@@ -79,7 +87,14 @@ while t < tf
 	t = t + dt;
 	i++;
 end
-plot(beeman(:,2),beeman(:,1),'c;Beeman ;')
+steps_bee = size(beeman,1);
+plot(beeman(2:steps_bee,2),beeman(2:steps_bee,1),'c;Beeman ;');
+xlabel("Tiempo");ylabel("Posicion");
+
+plot(r(:,2),r(:,1),'r;Analitico ;',beeman(2:steps_bee,2),beeman(2:steps_bee,1),'c;Beeman ;');
+xlabel("Tiempo");ylabel("Posicion");
+
+sum ( (r(:,1)-beeman(2:steps_bee,1)).^2) / steps_r
 
 input("Continue?")
 save dampingBeeman.txt beeman(:,1:2)
@@ -125,10 +140,15 @@ while t < tf
 	t = t + dt;
 	i++;
 end
-steps = size(verlet,1);
-plot(verlet(2:steps,2),verlet(2:steps,1),'m;Verlet ;');
+steps_ver = size(verlet,1);
+plot(verlet(2:steps_ver,2),verlet(2:steps_ver,1),'m;Verlet ;');
+
+plot(r(:,2),r(:,1),'r;Analitico ;',verlet(2:steps_ver,2),verlet(2:steps_ver,1),'m;Verlet ;');
+xlabel("Tiempo");ylabel("Posicion");
+
+sum ( (r(:,1)-verlet(2:steps_ver,1)).^2) / steps_r
 
 
 input("Finish?")
-plot(r(:,2),r(:,1),'r;Analitico ;',euler(:,2),euler(:,1),'br;Euler ;',verlet(2:steps,2),verlet(2:steps,1),'m;Verlet ;');
 save dampingVerlet.txt verlet
+plot(r(:,2),r(:,1),'r;Analitico ;',euler(:,2),euler(:,1),'g;Euler ;',beeman(2:steps_bee,2),beeman(2:steps_bee,1),'c;Beeman ;',verlet(2:steps_ver,2),verlet(2:steps_ver,1),'m;Verlet ;');
