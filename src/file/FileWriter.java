@@ -78,6 +78,39 @@ public class FileWriter {
         writer.close();
     }
 
+    public static void printStepsToGraphicFileWithMargins(
+            String file, List<List<Particle>> particleSteps, float l, float w)
+            throws IOException {
+        PrintWriter writer = new PrintWriter(file, "UTF-8");
+
+        StringBuilder builder;
+        for (int i = 0; i < particleSteps.size(); i++) {
+            writer.println(particleSteps.get(i).size() + 4);
+            writer.println(i);
+            writer.println("1.0 0.0 0.0 0 0 0 0 0");
+            writer.println("1.0 0.0 0.0 0 " + l + " 0 0 0");
+            writer.println("1.0 0.0 0.0 " + w + " " + l + " 0 0 0");
+            writer.println("1.0 0.0 0.0 " + w + " 0 0 0 0");
+            for (Particle p : particleSteps.get(i)) {
+                builder = new StringBuilder();
+                builder.append("1.0 0.0 0.0");
+                builder.append(" ");
+                builder.append(p.getX());
+                builder.append(" ");
+                builder.append(p.getY());
+                builder.append(" ");
+                builder.append(p.getVy());
+                builder.append(" ");
+                builder.append(p.getVx());
+                builder.append(" ");
+                builder.append(p.getRadius());
+                writer.println(builder.toString());
+            }
+        }
+
+        writer.close();
+    }
+
     private static boolean isNeighbor(int particleId, Particle p, Map<Particle, Set<Particle>> particleSetMap) {
         for (Particle p2 : particleSetMap.get(p)) {
             if (p2.getId() == particleId) return true;

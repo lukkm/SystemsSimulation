@@ -4,16 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import model.Particle;
-import utils.AngleUtils;
-import utils.CollisionUtils;
-import utils.NeighborUtils;
-import utils.OrbitUtils;
+import utils.*;
 
 import java.util.*;
 
 public class SimulationController {
 
-    private final float l;
+    private float l;
+    private float w;
+    private float d;
     private List<Particle> particleList;
     private Particle sun;
     private double orbitL;
@@ -21,6 +20,12 @@ public class SimulationController {
     public SimulationController(float l) {
         this.l = l;
         particleList = new ArrayList<>();
+    }
+
+    public SimulationController(float l, float w, float d) {
+        this(l);
+        this.w = w;
+        this.d = d;
     }
 
     public SimulationController(float l, List<Particle> particleList) {
@@ -44,26 +49,75 @@ public class SimulationController {
         return particleList;
     }
 
+    public List<List<Particle>> simulateSilum(int steps) {
+        List<List<Particle>> particleSteps = new ArrayList<>();
+        List<Particle> lastStep = new ArrayList<>(particleList);
+        particleSteps.add(particleList);
+
+        double dt = 0.0001;
+        int outputDt = 400;
+
+        for (int i = 0; i < steps; i++) {
+            List<Particle> newStep = new ArrayList<>();
+
+            // Evolve slowly to simulate continuous time
+            for (int j = 0; j < outputDt; j++) {
+                newStep.clear();
+                for (Particle p : lastStep) {
+                    double fy = p.getMass() * VerletUtils.GRAVITY_CONSTANT;
+                    double fx = 0;
+
+                    // Add wall collision forces
+                    fy += VerletUtils.calculateWallYCollisionForce(p, w, d);
+                    fx += VerletUtils.calculateWallXCollisionForce(p, l, w);
+
+                    Particle newParticle = VerletUtils.integrate(p, dt, fx, fy);
+
+                    // Add gravity
+                    newParticle.setVy(newParticle.getVy() - (SilumUtils.GRAVITY_CONSTANT * dt));
+
+                    // Calculate particle collisions
+
+                    // Remove particles outside the system
+                    if (newParticle.getY() >= -1) newStep.add(newParticle);
+                }
+                lastStep = new ArrayList<>(newStep);
+            }
+
+            particleSteps.add(lastStep);
+        }
+
+        return particleSteps;
+    }
+
     public List<List<Particle>> simulateOrbits(int steps) {
         List<List<Particle>> particleSteps = new ArrayList<>();
         List<Particle> lastStep = new ArrayList<>(particleList);
         particleSteps.add(particleList);
 
-        float dt = 400f;
+        double dt = 1;
+        int outputDt = 400;
 
         for (int i = 0; i < steps; i++) {
             List<Particle> newStep = new ArrayList<>();
-            newStep.add(sun);
-            for (Particle p : lastStep) {
-                Particle newParticle = evolveParticle(p, dt);
 
-                if (p != sun) {
-                    OrbitUtils.updateVelocity(sun, newParticle, orbitL);
-                    newStep.add(newParticle);
+            // Evolve slowly to simulate continuous time
+            for (int j = 0; j < outputDt; j++) {
+                newStep.clear();
+                newStep.add(sun);
+                for (Particle p : lastStep) {
+                    Particle newParticle = evolveParticle(p, dt);
+
+                    if (p != sun) {
+                        OrbitUtils.updateVelocity(sun, newParticle, orbitL);
+                        newStep.add(newParticle);
+                    }
                 }
+                lastStep = new ArrayList<>(newStep);
             }
-            particleSteps.add(newStep);
-            lastStep = newStep;
+
+            lastStep = OrbitUtils.calculateCollisions(sun, orbitL, lastStep);
+            particleSteps.add(lastStep);
         }
 
         return particleSteps;

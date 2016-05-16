@@ -4,6 +4,11 @@ import controller.SimulationController;
 import model.Particle;
 import org.omg.CORBA.ORB;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class OrbitUtils {
 
     public static final int ORBIT_RANGE_START = 100;
@@ -26,7 +31,7 @@ public class OrbitUtils {
 
         Particle p;
         for (int i = 0; i < N; i++) {
-            p = new Particle(i, radius/(N/10), 0, 0, 0);
+            p = new Particle(i, radius/N, 0, 0, 0);
 
             setRandomPosition(p, orbitSize, sun.getX());
 
@@ -65,6 +70,49 @@ public class OrbitUtils {
         p.setAngle(Math.atan2(deltaY, deltaX) + (Math.PI / 2));
     }
 
+    public static List<Particle> calculateCollisions(Particle sun, double orbitL, List<Particle> particleList) {
+        List<Particle> newList = new ArrayList<>();
+        Set<Particle> collidedParticles = new HashSet<>();
+
+        for (Particle p : particleList) {
+            boolean collided = false;
+
+            if (!collidedParticles.contains(p)) {
+                for (Particle p2 : particleList) {
+                    if (!collidedParticles.contains(p2)) {
+                        if (p != p2) {
+                            if (DistanceUtils.calculateDistance(p, p2) < 1) {
+                                collided = true;
+                                collidedParticles.add(p);
+                                collidedParticles.add(p2);
+
+                                // Generate new particle
+                                Particle collisionParticle = new Particle(
+                                        p.getId(),
+                                        p.getRadius() + p2.getRadius(),
+                                        0,
+                                        ((p.getX() * p.getMass()) +
+                                                (p2.getX() * p2.getMass())) /
+                                                        (p.getMass() + p2.getMass()),
+                                        ((p.getY() * p.getMass()) +
+                                                (p2.getY() * p2.getMass())) /
+                                                        (p.getMass() + p2.getMass()));
+
+                                collisionParticle.setMass(p.getMass() + p2.getMass());
+                                updateVelocity(sun, collisionParticle, orbitL);
+
+                                newList.add(collisionParticle);
+                            }
+                        }
+                    }
+                }
+                if (!collided) newList.add(p);
+            }
+        }
+
+        return newList;
+    }
+
     private static void setRandomPosition(Particle p, int orbitSize,    double sunCenter) {
         double distance = (Math.random() * orbitSize + ORBIT_RANGE_START);
         double angle = Math.random() * 2 * Math.PI;
@@ -75,6 +123,31 @@ public class OrbitUtils {
 
         p.setX(sunCenter + (distance * Math.cos(angle)));
         p.setY(sunCenter + (distance * Math.sin(angle)));
+    }
+
+    private static double getDistance(Particle p1, Particle p2) {
+        return Math.sqrt(Math.pow(p1.getX() - p2.getX(), 2) + Math.pow(p1.getY() - p2.getY(), 2));
+    }
+
+    public static double calculateTotalKineticEnergy(Particle sun, List<Particle> particleList) {
+        double K = 0;
+        for (Particle p : particleList) {
+            if (p != sun) {
+                K += (Math.pow(p.getV(), 2) * p.getMass()) / 2;
+            }
+        }
+        return K;
+    }
+
+    public static double calculateTotalPotentialEnergy(Particle sun, List<Particle> particleList) {
+        double U = 0;
+        for (Particle p : particleList) {
+            if (p != sun) {
+                double sunDistance = Math.sqrt(Math.pow(p.getX() - sun.getX(), 2) + Math.pow(p.getY() - sun.getY(), 2));
+                U += ((-G) * p.getMass() * sun.getMass()) / sunDistance;
+            }
+        }
+        return U;
     }
 
 }

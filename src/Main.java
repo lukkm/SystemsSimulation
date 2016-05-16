@@ -3,6 +3,7 @@ import model.Particle;
 import controller.SimulationController;
 import utils.DistanceUtils;
 import utils.OrbitUtils;
+import utils.SilumUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -15,6 +16,7 @@ public class Main {
     private static final int SIMULATE_MODE = 1;
     private static final int COLLISION_MODE = 2;
     private static final int ORBIT_MODE = 3;
+    private static final int SILUM_MODE = 4;
 
     public static void main(String[] args) {
         int mode = Integer.valueOf(args[0]);
@@ -29,27 +31,46 @@ public class Main {
         float velocityRange = 0.1f;
 
         float l = 1100f;
+        float w = 1000f;
+        float d = 100f;
         int N = 0;
 
-        if (mode != ORBIT_MODE) {
-            staticFile = args[1];
-            dynamicFile = args[2];
-            outputFile = args[3];
-            M = Integer.valueOf(args[4]);
-            rC = Float.valueOf(args[5]);
-            crossMap = Integer.valueOf(args[6]) != 0;
-            hasMass = Integer.valueOf(args[7]) != 0;
-            velocityRange = Float.valueOf(args[8]);
-        } else {
-            l = Float.valueOf(args[1]);
-            N = Integer.valueOf(args[2]);
-            outputFile = args[3];
+        switch (mode) {
+            case ORBIT_MODE:
+                l = Float.valueOf(args[1]);
+                N = Integer.valueOf(args[2]);
+                outputFile = args[3];
+                break;
+            case SILUM_MODE:
+                l = Float.valueOf(args[1]);
+                w = Float.valueOf(args[2]);
+                d = Float.valueOf(args[3]);
+                outputFile = args[4];
+                break;
+            default:
+                staticFile = args[1];
+                dynamicFile = args[2];
+                outputFile = args[3];
+                M = Integer.valueOf(args[4]);
+                rC = Float.valueOf(args[5]);
+                crossMap = Integer.valueOf(args[6]) != 0;
+                hasMass = Integer.valueOf(args[7]) != 0;
+                velocityRange = Float.valueOf(args[8]);
         }
 
         try {
-            SimulationController board = (mode != ORBIT_MODE) ?
-                    FileLoader.loadFiles(staticFile, dynamicFile, hasMass, velocityRange) :
-                    OrbitUtils.generateOrbitBoard(l, N);
+            SimulationController board = null;
+            switch (mode) {
+                case ORBIT_MODE:
+                    board = OrbitUtils.generateOrbitBoard(l, N);
+                    break;
+                case SILUM_MODE:
+                    board = SilumUtils.generateSilumParticles(l, w, d);
+                    break;
+                default:
+                    board = FileLoader.loadFiles(staticFile, dynamicFile, hasMass, velocityRange);
+            }
+
             if (board == null) {
                 System.out.println("Invalid file format");
                 return;
@@ -84,6 +105,11 @@ public class Main {
                     List<List<Particle>> orbitParticles = board.simulateOrbits(500);
                     file.FileWriter.printStepsToGraphicFile(outputFile, orbitParticles);
                     break;
+                case SILUM_MODE:
+                    List<List<Particle>> silumParticles = board.simulateSilum(500);
+                    file.FileWriter.printStepsToGraphicFileWithMargins(outputFile, silumParticles, l, w);
+                    break;
+
             }
 
         } catch (IOException e) {

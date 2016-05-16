@@ -6,6 +6,7 @@ public class Particle {
     double radius;
     double color;
     double x, y, v, angle;
+    double prevX, prevY;
     Double vx, vy;
     double mass;
 
@@ -15,6 +16,8 @@ public class Particle {
         this.color = color;
         this.x = x;
         this.y = y;
+        this.prevX = x;
+        this.prevY = y;
     }
 
     public Particle(int id, double radius, double color, double x, double y, double v, double angle) {
@@ -106,6 +109,22 @@ public class Particle {
 
     public void setMass(double mass) {
         this.mass = mass;
+    }
+
+    public void setPrevX(double prevX) {
+        this.prevX = prevX;
+    }
+
+    public void setPrevY(double prevY) {
+        this.prevY = prevY;
+    }
+
+    public double getPrevX() {
+        return prevX;
+    }
+
+    public double getPrevY() {
+        return prevY;
     }
 
     public Particle copy() {
