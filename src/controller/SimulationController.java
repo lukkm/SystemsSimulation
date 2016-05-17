@@ -54,29 +54,44 @@ public class SimulationController {
         List<Particle> lastStep = new ArrayList<>(particleList);
         particleSteps.add(particleList);
 
-        double dt = 0.0001;
-        int outputDt = 400;
+        double dt = 0.000001;
+        int outputDt = 10000;
 
         for (int i = 0; i < steps; i++) {
             List<Particle> newStep = new ArrayList<>();
+
+            double K = 0;
+            for (Particle p : lastStep) {
+                K += (p.getMass() * (Math.pow(p.getVx(), 2) + Math.pow(p.getVy(), 2))) / 2;
+            }
+
+            System.out.println(i + " " + lastStep.size() + " " + K);
+
+            double fx, fy;
 
             // Evolve slowly to simulate continuous time
             for (int j = 0; j < outputDt; j++) {
                 newStep.clear();
                 for (Particle p : lastStep) {
-                    double fy = p.getMass() * VerletUtils.GRAVITY_CONSTANT;
-                    double fx = 0;
-
-                    // Add wall collision forces
-                    fy += VerletUtils.calculateWallYCollisionForce(p, w, d);
-                    fx += VerletUtils.calculateWallXCollisionForce(p, l, w);
-
-                    Particle newParticle = VerletUtils.integrate(p, dt, fx, fy);
-
-                    // Add gravity
-                    newParticle.setVy(newParticle.getVy() - (SilumUtils.GRAVITY_CONSTANT * dt));
+                    fx = 0;
+                    fy = p.getMass() * VerletUtils.GRAVITY_CONSTANT;
 
                     // Calculate particle collisions
+                    for (Particle p2 : lastStep) {
+                        if (p != p2) {
+                            VerletUtils.CollisionForces forces = VerletUtils.calculateParticleCollisionForce(p, p2);
+                            if (forces != null) {
+                                fx += forces.getFx();
+                                fy += forces.getFy();
+                            }
+                        }
+                    }
+
+                    // Add wall collision forces
+                    fy += VerletUtils.calculateWallYCollisionForce(p, w, l, d);
+                    fx += VerletUtils.calculateWallXCollisionForce(p, w);
+
+                    Particle newParticle = VerletUtils.integrate(p, dt, fx, fy);
 
                     // Remove particles outside the system
                     if (newParticle.getY() >= -1) newStep.add(newParticle);

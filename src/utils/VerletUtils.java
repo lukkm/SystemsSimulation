@@ -15,9 +15,8 @@ public class VerletUtils {
         double currentPosY = p.getY();
         double nextPosX = ((2 * currentPosX) - p.getPrevX()) + ((Math.pow(dt, 2) / p.getMass()) * fx);
         double nextPosY = ((2 * currentPosY) - p.getPrevY()) + ((Math.pow(dt, 2) / p.getMass()) * fy);
-        double nextVelX = (nextPosX -  currentPosX) / dt;
+        double nextVelX = (nextPosX - currentPosX) / dt;
         double nextVelY = (nextPosY - currentPosY) / dt;
-
 
         Particle retParticle = p.copy();
         retParticle.setX(nextPosX);
@@ -27,71 +26,72 @@ public class VerletUtils {
         return retParticle;
     }
 
-    public static double calculateWallXCollisionForce(Particle p, double l, double w) {
-        if ((p.getX() - p.getRadius()) < 0 && isWithinBounds(p.getY(), l)) {
-            return KN * (-(p.getX() - p.getRadius()));
+    public static double calculateWallXCollisionForce(Particle p, double w) {
+        if (p.getX() - p.getRadius() < 0 && isWithinBounds(p.getY())) return KN * (-(p.getX() - p.getRadius()));
+        if ((p.getX() + p.getRadius()) > w && isWithinBounds(p.getY())) return KN * (w - (p.getX() + p.getRadius()));
+        return 0;
+    }
+
+    public static double calculateWallYCollisionForce(Particle p, double w, double l, double d) {
+        if ((p.getY() - p.getRadius()) < 0
+                && Math.abs(p.getY() - p.getRadius()) < 0.01
+                && !isInExit(p, w, d)) {
+            return KN * (-(p.getY() - p.getRadius()));
         }
-        if ((p.getX() + p.getRadius()) > w && isWithinBounds(p.getY(), l)) {
-            return KN * (w - (p.getX() + p.getRadius()));
+        if ((p.getY() + p.getRadius()) > l) {
+            return KN * (l - (p.getY() + p.getRadius()));
         }
         return 0;
     }
 
-    public static double calculateWallYCollisionForce(Particle p, double w, double d) {
-        if ((p.getY() - p.getRadius()) < 0 && !isInExit(p, w, d)) return KN * (-(p.getY() - p.getRadius()));
-        return 0;
-    }
+    public static CollisionForces calculateParticleCollisionForce(Particle p1, Particle p2) {
+        if (DistanceUtils.calculateDistance(p1, p2) > 0) return null;
 
-    public static Particle integrateWithParticleCollision(
-            Particle p1, PreviousConditions piPrevious, Particle p2, double dt, double KN, double KT, double g){
+        double deltaX = p2.getX() - p1.getX();
+        double deltaY = p2.getY() - p1.getY();
 
-        double d = Math.sqrt(Math.pow(p2.getX() - p1.getX(), 2) + Math.pow(p2.getY() - p1.getY(), 2));
-        double psi = p1.getRadius() + p2.getRadius() - d;
+        double d = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+        double psi = (p1.getRadius() + p2.getRadius()) - d;
 
-        double relVelX = p1.getVx() - p2.getVx();
-        double relVelY = p1.getVy() - p2.getVy();
+        double deltaVelX = p1.getVx() - p2.getVx();
+        double deltaVelY = p1.getVy() - p2.getVy();
 
-        double fn = -KN * psi; // Componente normal
+        double fn = -KN * psi;
 
-        double cosTita = (p2.getX() - p1.getX()) / d;
-        double senTita = (p2.getY() - p1.getY()) / d;
-        double ft = -KT * psi * ((relVelX * -senTita) + (relVelY * cosTita));
+        double cosTita = deltaX / d;
+        double senTita = deltaY / d;
+        double ft = -KT * psi * ((deltaVelX * -senTita) + (deltaVelY * cosTita));
         double fnx = fn * cosTita;
         double fny = fn * senTita;
         double ftx = ft * -senTita;
         double fty = ft * cosTita;
 
-        double fx = fnx + ftx;
-        double fy = fny + fty + (p1.getMass() * g);
-
-        double currentPosX = p1.getX();
-        double currentPosY = p1.getY();
-        double nextPosX = 2 * currentPosX - piPrevious.x + (Math.pow(dt, 2) / p1.getMass()) * fx;
-        double nextPosY = 2 * currentPosY - piPrevious.y + (Math.pow(dt, 2) / p1.getMass()) * fy;
-        double nextVelX = (nextPosX - currentPosX) / dt;
-        double nextVelY = (nextPosY - currentPosY) / dt;
-
-        Particle retParticle = p1.copy();
-        retParticle.setVx(nextVelX);
-        retParticle.setVy(nextVelY);
-        return retParticle;
+        return new CollisionForces(fnx + ftx, fny + fty);
     }
 
-    private static boolean isWithinBounds(double position, double boxSize) {
-        return position > 0 && position < boxSize;
+    private static boolean isWithinBounds(double position) {
+        return position > 0;
     }
 
     private static boolean isInExit(Particle p, double w, double d) {
         return p.getX() > ((w/2) - (d/2)) && p.getX() < ((w/2) + (d/2));
     }
 
-    public class PreviousConditions{
-        public double x;
-        public double y;
+    public static class CollisionForces {
+        public double fx;
+        public double fy;
 
-        public PreviousConditions(double x, double y) {
-            this.x = x;
-            this.y = y;
+        public CollisionForces(double fx, double fy) {
+            this.fx = fx;
+            this.fy = fy;
+        }
+
+        public double getFx() {
+            return fx;
+        }
+
+        public double getFy() {
+            return fy;
         }
     }
 
