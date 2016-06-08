@@ -36,4 +36,17 @@ public class DistanceUtils {
         return closeParticles;
     }
 
+    public static boolean overlapsAny(Particle p, List<Particle> particleList) {
+        for (Particle p2 : particleList) {
+            if (calculateDistance(p, p2) < 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static double getRandPosition(float boxSize, float radius) {
+        return (Math.random() * (boxSize - (radius * 2))) + radius;
+    }
+
 }

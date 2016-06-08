@@ -2,6 +2,7 @@ import file.FileLoader;
 import model.Particle;
 import controller.SimulationController;
 import utils.DistanceUtils;
+import utils.EscapeUtils;
 import utils.OrbitUtils;
 import utils.SilumUtils;
 
@@ -17,6 +18,7 @@ public class Main {
     private static final int COLLISION_MODE = 2;
     private static final int ORBIT_MODE = 3;
     private static final int SILUM_MODE = 4;
+    private static final int ESCAPE_MODE = 5;
 
     public static void main(String[] args) {
         int mode = Integer.valueOf(args[0]);
@@ -47,6 +49,10 @@ public class Main {
                 d = Float.valueOf(args[3]);
                 outputFile = args[4];
                 break;
+            case ESCAPE_MODE:
+                N = Integer.valueOf(args[1]);
+                outputFile = args[2];
+                break;
             default:
                 staticFile = args[1];
                 dynamicFile = args[2];
@@ -59,13 +65,16 @@ public class Main {
         }
 
         try {
-            SimulationController board = null;
+            SimulationController board;
             switch (mode) {
                 case ORBIT_MODE:
                     board = OrbitUtils.generateOrbitBoard(l, N);
                     break;
                 case SILUM_MODE:
                     board = SilumUtils.generateSilumParticles(l, w, d);
+                    break;
+                case ESCAPE_MODE:
+                    board = EscapeUtils.generateEscapeParticles(N);
                     break;
                 default:
                     board = FileLoader.loadFiles(staticFile, dynamicFile, hasMass, velocityRange);
@@ -108,6 +117,15 @@ public class Main {
                 case SILUM_MODE:
                     List<List<Particle>> silumParticles = board.simulateSilum(500);
                     file.FileWriter.printStepsToGraphicFileWithMargins(outputFile, silumParticles, l, w);
+                    break;
+                case ESCAPE_MODE:
+                    List<List<Particle>> escapeParticles = board.simulateEscape(500);
+                    file.FileWriter.printStepsToGraphicFileWithDoor(
+                            outputFile,
+                            escapeParticles,
+                            EscapeUtils.BOARD_SIZE,
+                            EscapeUtils.BOARD_SIZE,
+                            EscapeUtils.DOOR_SIZE);
                     break;
 
             }

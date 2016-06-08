@@ -22,9 +22,13 @@ public class SimulationController {
         particleList = new ArrayList<>();
     }
 
-    public SimulationController(float l, float w, float d) {
+    public SimulationController(float l, float w) {
         this(l);
         this.w = w;
+    }
+
+    public SimulationController(float l, float w, float d) {
+        this(l, w);
         this.d = d;
     }
 
@@ -47,6 +51,81 @@ public class SimulationController {
 
     public List<Particle> getParticleList() {
         return particleList;
+    }
+
+    public List<List<Particle>> simulateEscape(int steps) {
+        List<List<Particle>> particleSteps = new ArrayList<>();
+        List<Particle> lastStep = new ArrayList<>(particleList);
+        particleSteps.add(particleList);
+
+        double dt = 0.0001;
+        int outputDt = 2000;
+
+        for (int i = 0; i < steps; i++) {
+            List<Particle> newStep = new ArrayList<>();
+
+            System.out.println(((double)i * 0.2) + " " + lastStep.size());
+
+            double fx, fy;
+
+            // Evolve slowly to simulate continuous time
+            for (int j = 0; j < outputDt; j++) {
+                newStep.clear();
+                for (Particle p : lastStep) {
+                    fx = 0;
+                    fy = 0;
+
+                    // Calculate particle collisions
+                    for (Particle p2 : lastStep) {
+                        if (p != p2) {
+                            VerletUtils.CollisionForces forces = VerletUtils.calculateParticleCollisionForce(p, p2);
+                            if (forces != null) {
+                                fx += forces.getFx();
+                                fy += forces.getFy();
+                            }
+                        }
+                    }
+
+                    // Add goal force
+                    EscapeUtils.ParticleForce goalForces = EscapeUtils.calculateGoalForces(p);
+                    fx += goalForces.getFx();
+                    fy += goalForces.getFy();
+
+                    // Calculate social forces
+                    for (Particle p2 : lastStep) {
+                        if (p != p2) {
+                            EscapeUtils.ParticleForce forces = EscapeUtils.calculateSocialForces(p, p2);
+                            if (forces != null) {
+                                fx += forces.getFx();
+                                fy += forces.getFy();
+                            }
+                        }
+                    }
+
+                    // Add wall collisions
+                    if (EscapeUtils.isYColliding(p, w)) {
+                        p.setPrevY(p.getY());
+                        p.setVy(0.0);
+                        fy = 0;
+                    }
+                    if (EscapeUtils.isDoorXColliding(p, w, l) || EscapeUtils.isXColliding(p, w)) {
+                        fx = 0;
+                        p.setPrevX(p.getX());
+                        p.setVx(0.0);
+                    }
+
+                    Particle newParticle = VerletUtils.integrate(p, dt, fx, fy);
+
+                    // Remove particles outside the system
+                    if (newParticle.getX() <= EscapeUtils.ESCAPE_X) newStep.add(newParticle);
+                }
+                lastStep = new ArrayList<>(newStep);
+            }
+
+            particleSteps.add(lastStep);
+        }
+
+        return particleSteps;
     }
 
     public List<List<Particle>> simulateSilum(int steps) {

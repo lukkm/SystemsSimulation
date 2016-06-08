@@ -7,7 +7,7 @@ public class VerletUtils {
 
     public static final float GRAVITY_CONSTANT = -9.8f;
 
-    public static final int KN = 100000;
+    public static final int KN = 10000;
     public static final int KT = 200000;
 
     public static Particle integrate(Particle p, double dt, double fx, double fy) {
