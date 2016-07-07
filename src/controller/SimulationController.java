@@ -14,12 +14,16 @@ public class SimulationController {
     private float w;
     private float d;
     private List<Particle> particleList;
+    private List<Particle> obstacleList;
+    private List<Particle> moveableObstacleList;
     private Particle sun;
     private double orbitL;
 
     public SimulationController(float l) {
         this.l = l;
         particleList = new ArrayList<>();
+        obstacleList = new ArrayList<>();
+        moveableObstacleList = new ArrayList<>();
     }
 
     public SimulationController(float l, float w) {
@@ -37,8 +41,22 @@ public class SimulationController {
         this.particleList = particleList;
     }
 
+    public SimulationController(float l, List<Particle> particleList, List<Particle> obstacleList, List<Particle> moveableObstacleList) {
+        this(l, particleList);
+        this.obstacleList = obstacleList;
+        this.moveableObstacleList = moveableObstacleList;
+    }
+
     public void addPartcile(Particle p) {
         particleList.add(p);
+    }
+
+    public void addObstacle(Particle p) {
+        obstacleList.add(p);
+    }
+
+    public void addMoveableObstacle(Particle p) {
+        moveableObstacleList.add(p);
     }
 
     public void setSun(Particle sun) {
@@ -51,6 +69,323 @@ public class SimulationController {
 
     public List<Particle> getParticleList() {
         return particleList;
+    }
+
+    public List<Particle> getObstacleList() {
+        return obstacleList;
+    }
+
+    public List<Particle> getMoveableObstacleList() {
+        return moveableObstacleList;
+    }
+
+    public List<List<Particle>> simulateObstacles(int steps) {
+        Particle human = particleList.get(0);
+
+        List<List<Particle>> particleSteps = new ArrayList<>();
+
+        List<Particle> lastStep = new ArrayList<>(moveableObstacleList);
+
+        List<Particle> completeList = new ArrayList<>();
+        completeList.add(human);
+        completeList.addAll(obstacleList);
+        completeList.addAll(moveableObstacleList);
+        particleSteps.add(completeList);
+
+        for (Particle moveableObstacle : moveableObstacleList) {
+            ObstacleUtils.setRandomGoal(moveableObstacle);
+        }
+
+        double dt = 0.0001;
+        int outputDt = 2000;
+
+        Particle newParticle = human;
+
+        for (int i = 0; i < steps; i++) {
+            List<Particle> newStep = new ArrayList<>();
+            double fx, fy;
+
+            System.out.println(i * 0.2);
+
+            ObstacleUtils.ObstacleGoal prevGoal = ObstacleUtils.MAIN_GOAL;
+
+            if (DistanceUtils.calculateDistance(
+                    newParticle.getX(),
+                    newParticle.getY(),
+                    newParticle.getRadius(),
+                    ObstacleUtils.MAIN_GOAL.getX(),
+                    ObstacleUtils.MAIN_GOAL.getY(),
+                    0) < newParticle.getRadius()) {
+                break;
+            }
+
+            // Evolve slowly to simulate continuous time
+            for (int j = 0; j < outputDt; j++) {
+                newStep.clear();
+
+                for (Particle p : lastStep) {
+                    fx = 0;
+                    fy = 0;
+
+                    // Calculate obstacle collisions
+                    for (Particle p2 : obstacleList) {
+                        VerletUtils.CollisionForces forces = VerletUtils.calculateParticleCollisionForce(p, p2);
+                        if (forces != null) {
+                            fx += forces.getFx();
+                            fy += forces.getFy();
+                        }
+                    }
+                    for (Particle p2 : lastStep) {
+                        if (p2 != p) {
+                            VerletUtils.CollisionForces forces = VerletUtils.calculateParticleCollisionForce(p, p2);
+                            if (forces != null) {
+                                fx += forces.getFx();
+                                fy += forces.getFy();
+                            }
+                        }
+                    }
+
+                    VerletUtils.CollisionForces humanForces = VerletUtils.calculateParticleCollisionForce(p, newParticle);
+                    if (humanForces != null) {
+                        fx += humanForces.getFx();
+                        fy += humanForces.getFy();
+                    }
+
+                    // Add goal force
+                    ParticleForce goalForces = ObstacleUtils.calculateGoalForces(p, p.getGoal());
+                    fx += goalForces.getFx();
+                    fy += goalForces.getFy();
+
+                    // Calculate social forces
+                    for (Particle p2 : obstacleList) {
+                        ParticleForce forces = EscapeUtils.calculateSocialForces(p, p2);
+                        if (forces != null) {
+                            fx += forces.getFx();
+                            fy += forces.getFy();
+                        }
+                    }
+                    for (Particle p2 : lastStep) {
+                        if (p != p2) {
+                            ParticleForce forces = EscapeUtils.calculateSocialForces(p, p2);
+                            if (forces != null) {
+                                fx += forces.getFx();
+                                fy += forces.getFy();
+                            }
+                        }
+                    }
+
+                    if (DistanceUtils.calculateDistance(
+                            p.getX(),
+                            p.getY(),
+                            p.getRadius(),
+                            p.getGoal().getX(),
+                            p.getGoal().getY(),
+                            0) < p.getRadius()) {
+                        ObstacleUtils.setRandomGoal(p);
+                    }
+
+                    newStep.add(VerletUtils.integrate(p, dt, fx, fy));
+                }
+                lastStep = new ArrayList<>(newStep);
+
+                // Here
+                // Starts
+                // Human
+                if (DistanceUtils.calculateDistance(
+                        newParticle.getX(),
+                        newParticle.getY(),
+                        newParticle.getRadius(),
+                        ObstacleUtils.MAIN_GOAL.getX(),
+                        ObstacleUtils.MAIN_GOAL.getY(),
+                        0) > newParticle.getRadius()) {
+                    for (ObstacleUtils.ObstacleGoal goal : ObstacleUtils.GOALS_LIST) {
+                        goal.revive();
+                    }
+
+                    fx = 0;
+                    fy = 0;
+
+                    // Calculate obstacle collisions
+                    for (Particle p : obstacleList) {
+                        VerletUtils.CollisionForces forces = VerletUtils.calculateParticleCollisionForce(newParticle, p);
+                        if (forces != null) {
+                            fx += forces.getFx();
+                            fy += forces.getFy();
+                        }
+                    }
+                    for (Particle p : lastStep) {
+                        VerletUtils.CollisionForces forces = VerletUtils.calculateParticleCollisionForce(newParticle, p);
+                        if (forces != null) {
+                            fx += forces.getFx();
+                            fy += forces.getFy();
+                        }
+                    }
+
+                    // Calculate desired goal
+                    ObstacleUtils.ObstacleGoal goal = null;
+                    if (canReachGoal(newParticle, ObstacleUtils.MAIN_GOAL)) {
+                        goal = ObstacleUtils.MAIN_GOAL;
+                    } else {
+                        if (ObstacleUtils.MAIN_GOAL.isValid()) goal = ObstacleUtils.MAIN_GOAL;
+                        if (goal == null || !canMoveTowardsGoal(newParticle, goal, lastStep)) {
+                            for (ObstacleUtils.ObstacleGoal goalTrial : ObstacleUtils.GOALS_LIST) {
+                                if ((goalTrial.getY() == 19 && canReachGoal(newParticle, goalTrial))) {
+                                    goal = goalTrial;
+                                    break;
+                                }
+                                if (goalTrial.isValid()) {
+                                    if (canMoveTowardsGoal(newParticle, goalTrial, lastStep)) {
+                                        goal = goalTrial;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (goal == null) goal = ObstacleUtils.MAIN_GOAL;
+
+                    // If goal reached and not useful, invalidate it for good
+                    if (goal != ObstacleUtils.MAIN_GOAL) {
+                        if (DistanceUtils.calculateDistance(
+                                newParticle.getX(),
+                                newParticle.getY(),
+                                newParticle.getRadius(),
+                                goal.getX(),
+                                goal.getY(),
+                                0) < 0) {
+                            goal.invalidate(Integer.MAX_VALUE);
+                        }
+                    }
+
+                    if (goal != prevGoal) {
+                        prevGoal.invalidate(50000);
+                    }
+
+                    prevGoal = goal;
+
+                    // Add goal force
+                    ParticleForce goalForces = ObstacleUtils.calculateGoalForces(newParticle, goal);
+                    fx += goalForces.getFx();
+                    fy += goalForces.getFy();
+
+                    // Calculate social forces
+                    for (Particle p : obstacleList) {
+                        ParticleForce forces = EscapeUtils.calculateSocialForces(newParticle, p);
+                        if (forces != null) {
+                            fx += forces.getFx();
+                            fy += forces.getFy();
+                        }
+                    }
+                    for (Particle p : lastStep) {
+                        ParticleForce forces = EscapeUtils.calculateSocialForces(newParticle, p);
+                        if (forces != null) {
+                            fx += forces.getFx();
+                            fy += forces.getFy();
+                        }
+                    }
+
+                    newParticle = VerletUtils.integrate(newParticle, dt, fx, fy);
+                }
+            }
+
+            completeList = new ArrayList<>();
+            completeList.add(newParticle);
+            completeList.addAll(obstacleList);
+            completeList.addAll(lastStep);
+
+            particleSteps.add(completeList);
+        }
+
+        return particleSteps;
+    }
+
+    private boolean canMoveTowardsGoal(Particle p, ObstacleUtils.ObstacleGoal goal, List<Particle> moveableObstacles) {
+        double deltaX = goal.getX() - p.getX();
+        double deltaY = goal.getY() - p.getY();
+        double angle = Math.atan2(deltaX, deltaY);
+
+        double xDiff = Math.sin(angle) * p.getRadius() * 2;
+        double yDiff = Math.cos(angle) * p.getRadius() * 2;
+        for (int k = 1; k <= 5; k++) {
+            double newDeltaX = xDiff * k;
+            double newDeltaY = yDiff * k;
+
+            for (Particle obstacle : obstacleList) {
+                if (DistanceUtils.calculateDistance(
+                        p.getX() + newDeltaX,
+                        p.getY() + newDeltaY,
+                        p.getRadius(),
+                        obstacle.getX(),
+                        obstacle.getY(),
+                        obstacle.getRadius()) < p.getRadius()) {
+                    return false;
+                }
+            }
+            for (Particle obstacle : moveableObstacles) {
+                if (DistanceUtils.calculateDistance(
+                        p.getX() + newDeltaX,
+                        p.getY() + newDeltaY,
+                        p.getRadius(),
+                        obstacle.getX(),
+                        obstacle.getY(),
+                        obstacle.getRadius()) < p.getRadius()) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean canReachGoal(Particle p, ObstacleUtils.ObstacleGoal goal) {
+        double deltaX = goal.getX() - p.getX();
+        double deltaY = goal.getY() - p.getY();
+        double angle = Math.atan2(deltaX, deltaY);
+
+        double xDiff = Math.sin(angle) * p.getRadius() * 2;
+        double yDiff = Math.cos(angle) * p.getRadius() * 2;
+
+        int k = 2;
+        double newX = p.getX() + xDiff;
+        double newY = p.getY() + yDiff;
+        while (DistanceUtils.calculateDistance(
+                newX,
+                newY,
+                p.getRadius(),
+                goal.getX(),
+                goal.getY(),
+                0) > p.getRadius()) {
+            newX = p.getX() + xDiff * k;
+            newY = p.getY() + yDiff * k;
+
+            for (Particle obstacle : obstacleList) {
+                if (DistanceUtils.calculateDistance(
+                        newX,
+                        newY,
+                        p.getRadius(),
+                        obstacle.getX(),
+                        obstacle.getY(),
+                        obstacle.getRadius()) < 0) {
+                    return false;
+                }
+            }
+            for (Particle obstacle : moveableObstacleList) {
+                if (DistanceUtils.calculateDistance(
+                        newX,
+                        newY,
+                        p.getRadius(),
+                        obstacle.getX(),
+                        obstacle.getY(),
+                        obstacle.getRadius()) < 0) {
+                    return false;
+                }
+            }
+
+            k++;
+        }
+
+        return true;
     }
 
     public List<List<Particle>> simulateEscape(int steps) {
@@ -87,14 +422,14 @@ public class SimulationController {
                     }
 
                     // Add goal force
-                    EscapeUtils.ParticleForce goalForces = EscapeUtils.calculateGoalForces(p);
+                    ParticleForce goalForces = EscapeUtils.calculateGoalForces(p);
                     fx += goalForces.getFx();
                     fy += goalForces.getFy();
 
                     // Calculate social forces
                     for (Particle p2 : lastStep) {
                         if (p != p2) {
-                            EscapeUtils.ParticleForce forces = EscapeUtils.calculateSocialForces(p, p2);
+                            ParticleForce forces = EscapeUtils.calculateSocialForces(p, p2);
                             if (forces != null) {
                                 fx += forces.getFx();
                                 fy += forces.getFy();

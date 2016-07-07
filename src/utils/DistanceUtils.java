@@ -17,7 +17,7 @@ public class DistanceUtils {
         return calculateDistance(p1.getX(), p1.getY(), p1.getRadius(), p2.getX(), p2.getY(), p2.getRadius());
     }
 
-    private static double calculateDistance(double x1, double y1, double r1, double x2, double y2, double r2) {
+    public static double calculateDistance(double x1, double y1, double r1, double x2, double y2, double r2) {
         return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)) - r1 - r2;
     }
 
@@ -47,6 +47,12 @@ public class DistanceUtils {
 
     public static double getRandPosition(float boxSize, float radius) {
         return (Math.random() * (boxSize - (radius * 2))) + radius;
+    }
+
+    public static double getRandPositionBetween(float boxStart, float boxEnd, float radius) {
+        double boxSize = boxEnd - boxStart;
+        double rand = (Math.random() * (boxSize - (radius * 2))) + radius;
+        return rand + boxStart;
     }
 
 }

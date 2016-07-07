@@ -1,10 +1,7 @@
 import file.FileLoader;
 import model.Particle;
 import controller.SimulationController;
-import utils.DistanceUtils;
-import utils.EscapeUtils;
-import utils.OrbitUtils;
-import utils.SilumUtils;
+import utils.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,6 +16,7 @@ public class Main {
     private static final int ORBIT_MODE = 3;
     private static final int SILUM_MODE = 4;
     private static final int ESCAPE_MODE = 5;
+    private static final int OBSTACLES_MODE = 6;
 
     public static void main(String[] args) {
         int mode = Integer.valueOf(args[0]);
@@ -36,6 +34,7 @@ public class Main {
         float w = 1000f;
         float d = 100f;
         int N = 0;
+        int moveableN = 0;
 
         switch (mode) {
             case ORBIT_MODE:
@@ -50,8 +49,10 @@ public class Main {
                 outputFile = args[4];
                 break;
             case ESCAPE_MODE:
+            case OBSTACLES_MODE:
                 N = Integer.valueOf(args[1]);
-                outputFile = args[2];
+                moveableN = Integer.valueOf(args[2]);
+                outputFile = args[3];
                 break;
             default:
                 staticFile = args[1];
@@ -75,6 +76,9 @@ public class Main {
                     break;
                 case ESCAPE_MODE:
                     board = EscapeUtils.generateEscapeParticles(N);
+                    break;
+                case OBSTACLES_MODE:
+                    board = ObstacleUtils.generateObstacleParticles(N, moveableN);
                     break;
                 default:
                     board = FileLoader.loadFiles(staticFile, dynamicFile, hasMass, velocityRange);
@@ -127,7 +131,14 @@ public class Main {
                             EscapeUtils.BOARD_SIZE,
                             EscapeUtils.DOOR_SIZE);
                     break;
-
+                case OBSTACLES_MODE:
+                    List<List<Particle>> obstacleParticles = board.simulateObstacles(500);
+                    file.FileWriter.printStepsToGraphicFileWithHuman(
+                            outputFile,
+                            obstacleParticles,
+                            ObstacleUtils.BOARD_HEIGHT,
+                            ObstacleUtils.BOARD_WIDTH);
+                    break;
             }
 
         } catch (IOException e) {

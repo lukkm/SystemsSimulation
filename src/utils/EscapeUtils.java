@@ -16,7 +16,7 @@ public class EscapeUtils {
     public static final int GOAL_Y = 10;
 
     public static final double TAU = 0.5;
-    public static final double VD = 4;
+    public static final double VD = 0.8;
     public static final double A = 2000;
     public static final double B = 0.08;
 
@@ -88,22 +88,6 @@ public class EscapeUtils {
         return p.getY() > ((w/2) - (d/2)) && p.getY() < ((w/2) + (d/2));
     }
 
-    public static class ParticleForce {
-        double fx;
-        double fy;
 
-        public ParticleForce(double fx, double fy) {
-            this.fx = fx;
-            this.fy = fy;
-        }
-
-        public double getFx() {
-            return fx;
-        }
-
-        public double getFy() {
-            return fy;
-        }
-    }
 
 }

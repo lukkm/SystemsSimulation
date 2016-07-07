@@ -1,5 +1,7 @@
 package model;
 
+import utils.ObstacleUtils;
+
 public class Particle {
 
     int id;
@@ -9,6 +11,7 @@ public class Particle {
     double prevX, prevY;
     Double vx, vy;
     double mass;
+    ObstacleUtils.ObstacleGoal goal;
 
     public Particle(int id, double radius, double color, double x, double y) {
         this.id = id;
@@ -127,7 +130,17 @@ public class Particle {
         return prevY;
     }
 
+    public ObstacleUtils.ObstacleGoal getGoal() {
+        return goal;
+    }
+
+    public void setGoal(ObstacleUtils.ObstacleGoal goal) {
+        this.goal = goal;
+    }
+
     public Particle copy() {
-        return new Particle(id, radius, color, x, y, v, angle, mass, vx, vy);
+        Particle p = new Particle(id, radius, color, x, y, v, angle, mass, vx, vy);
+        if (goal != null) p.setGoal(goal);
+        return p;
     }
 }
