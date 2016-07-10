@@ -101,11 +101,13 @@ public class SimulationController {
 
         Particle newParticle = human;
 
+        List<Double> angles = new ArrayList<>();
+
         for (int i = 0; i < steps; i++) {
             List<Particle> newStep = new ArrayList<>();
             double fx, fy;
 
-            System.out.println(i * 0.2);
+            //System.out.println(i * 0.2);
 
             ObstacleUtils.ObstacleGoal prevGoal = ObstacleUtils.MAIN_GOAL;
 
@@ -259,7 +261,7 @@ public class SimulationController {
                     }
 
                     if (goal != prevGoal) {
-                        prevGoal.invalidate(50000);
+                        prevGoal.invalidate(40000);
                     }
 
                     prevGoal = goal;
@@ -289,6 +291,17 @@ public class SimulationController {
                 }
             }
 
+            double deltaX = newParticle.getX() - newParticle.getPrevX();
+            double deltaY = newParticle.getY() - newParticle.getPrevY();
+
+            double angle = Math.atan2(deltaX, deltaY);
+            angle = (Math.toDegrees(angle) + 270) % 360;
+            //System.out.print("Angle1: " + angle);
+            if (angle > 180) angle -= 360;
+
+            //System.out.println(i * 0.2 + " " + angle);
+            angles.add(angle);
+
             completeList = new ArrayList<>();
             completeList.add(newParticle);
             completeList.addAll(obstacleList);
@@ -296,6 +309,18 @@ public class SimulationController {
 
             particleSteps.add(completeList);
         }
+
+        double angleMedia = 0;
+        for (Double d : angles) angleMedia += d;
+        angleMedia /= angles.size();
+
+        System.out.println(angleMedia);
+
+        double angleDifferencesMedia = 0;
+        for (Double d : angles) angleDifferencesMedia += Math.pow(d - angleMedia, 2);
+        angleDifferencesMedia /= angles.size();
+
+        System.out.println("Std Dev: " + Math.sqrt(angleDifferencesMedia));
 
         return particleSteps;
     }
